@@ -1,7 +1,6 @@
 """Config file for Tentacle."""
 
 from celery.utils.log import get_logger
-from kombu import Queue, Exchange, Connection
 
 logger = get_logger('nautilus')
 
@@ -29,16 +28,12 @@ class Config(object):
     KRAKEN_HOST = ''
     KRAKEN_PORT = 5672
     KRAKEN_VHOST = 'kraken'
-    KRAKEN_CONNECTION = Connection('amqp://{user}:{password}@{host}:{port}/{vhost}'.format(
+    KRAKEN_URL = 'amqp://{user}:{password}@{host}:{port}/{vhost}'.format(
         user=KRAKEN_USER,
         password=KRAKEN_PASSWORD,
         host=KRAKEN_HOST,
         port=KRAKEN_PORT,
         vhost=KRAKEN_VHOST
-    ))
-    KRAKEN_EXCHANGE = Exchange(name='kraken')
-    KRAKEN_QUEUE = Queue(routing_key='kraken',
-                         durable=False,
-                         exchange=KRAKEN_EXCHANGE)
+    )
 
     KRAKEN_LOG_RESPONSE = True  # DEBUG logs kraken response in Kraken.hit
