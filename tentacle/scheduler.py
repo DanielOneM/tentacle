@@ -63,6 +63,18 @@ class Interval(object):
             return 'every {0.period_singular}'.format(self)
         return 'every {0.every} {0.period}'.format(self)
 
+    def to_dict(self):
+        """Serialize this object to a dict."""
+        return {'every': self._every, 'period': self._period}
+
+    @classmethod
+    def from_dict(cls, data):
+        """Deserialize from a dict."""
+        result = cls()
+        result._every = data['every']
+        result._period = data['period']
+        return result
+
 
 class Crontab(object):
     """Object used to model a crontab."""
@@ -88,3 +100,21 @@ class Crontab(object):
             self.minute, self.hour, self.day_of_week,
             self.day_of_month, self.month_of_year
         )
+
+    def to_dict(self):
+        """Serialize this object to a dict."""
+        output = {}
+        for key in ['minute', 'hour', 'day_of_week',
+                    'day_of_month', 'month_of_year']:
+            output.update({key: getattr(self, key)})
+
+        return output
+
+    @classmethod
+    def from_dict(cls, data):
+        """Deserialize from a dict."""
+        result = cls()
+        for key in ['minute', 'hour', 'day_of_week',
+                    'day_of_month', 'month_of_year']:
+            setattr(result, key, data.get(key, '*'))
+        return result
