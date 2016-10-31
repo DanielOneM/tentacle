@@ -23,7 +23,6 @@ class Config(object):
 
     # default backend for event store
     DEFAULT_BACKEND = 'aerospike'
-    DEFAULT_QUEUE = 'tentacle'
 
     # Kraken connection data
     KRAKEN_USER = 'kraken'

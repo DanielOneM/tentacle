@@ -13,7 +13,7 @@ class TestEndpointTasks(unittest.TestCase):
         """Initialize common objects."""
         self.dummy = EventStore(backend='dummy')
         endp.event_store = self.dummy
-        task_payload = {'something': 'something'}
+        task_payload = {'something': 'something', 'worker_type': 'nautilus'}
         endp.put(task_payload)
 
     def test_put(self):
@@ -31,8 +31,9 @@ class TestEndpointTasks(unittest.TestCase):
 
     def test_delete(self):
         """Check the delete endpoint."""
+        self.assertIsNotNone(self.dummy.get('something'))
         endp.delete('something')
-        self.assertEqual(endp.get('something'), None)
+        self.assertEqual(self.dummy.get('something'), None)
 
     def test_search(self):
         """Check the search endpoint."""
