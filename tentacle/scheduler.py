@@ -3,6 +3,7 @@
 import datetime
 
 import celery.schedules
+from celery.beat import Scheduler, ScheduleEntry
 
 # Possible values for PeriodicTask.Interval.period
 PERIODS = ('days', 'hours', 'minutes', 'seconds', 'microseconds')
@@ -118,3 +119,70 @@ class Crontab(object):
                     'day_of_month', 'month_of_year']:
             setattr(result, key, data.get(key, '*'))
         return result
+
+
+class TaskModel(object):
+    """Task model."""
+
+    name = None
+    task = None
+
+    interval = Interval()
+    crontab = Crontab()
+
+    args = None
+    kwargs = None
+
+    queue = None
+    exchange = None
+    routing_key = None
+    soft_time_limit = None
+
+    expires = None
+    enabled = None
+
+    last_run_at = None
+
+    total_run_count = None
+
+    date_changed = None
+    description = None
+
+    run_immediately = False
+
+    def validate(self):
+        """Validation to ensure that you only have
+        an interval or crontab schedule, but not both simultaneously."""
+        if self.interval and self.crontab:
+            msg = 'Cannot define both interval and crontab schedule.'
+            raise ValueError(msg)
+        if not (self.interval or self.crontab):
+            msg = 'Must defined either interval or crontab schedule.'
+            raise ValueError(msg)
+
+    @property
+    def schedule(self):
+        if self.interval:
+            return self.interval.schedule
+        elif self.crontab:
+            return self.crontab.schedule
+        else:
+            raise Exception("must define interval or crontab schedule")
+
+    def __unicode__(self):
+        fmt = '{0.name}: {{no schedule}}'
+        if self.interval:
+            fmt = '{0.name}: {0.interval}'
+        elif self.crontab:
+            fmt = '{0.name}: {0.crontab}'
+        else:
+            raise Exception("must define interval or crontab schedule")
+        return fmt.format(self)
+
+
+class EventEntry(ScheduleEntry):
+    pass
+
+
+class EventScheduler(Scheduler):
+    pass
