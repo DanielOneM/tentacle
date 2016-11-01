@@ -4,6 +4,10 @@ import datetime
 
 import celery.schedules
 from celery.beat import Scheduler, ScheduleEntry
+from celery import current_app
+
+from store import event_store
+from config import Config
 
 # Possible values for PeriodicTask.Interval.period
 PERIODS = ('days', 'hours', 'minutes', 'seconds', 'microseconds')
@@ -17,10 +21,12 @@ class Interval(object):
 
     @property
     def every(self):
+        """Property getter."""
         return self._every
 
-    @property.setter
+    @every.setter
     def every(self, value):
+        """Property setter."""
         if value is None:
             self._every = 0
             return
@@ -34,12 +40,14 @@ class Interval(object):
 
     @property
     def period(self):
+        """Property getter."""
         if self._period is None:
             raise ValueError("'period' attribute cannot be None.")
         return self._period
 
-    @property.setter
+    @period.setter
     def period(self, value):
+        """Property setter."""
         if value not in PERIODS:
             raise ValueError("value must be one of: 'days', 'hours', 'minutes', \
                              'seconds', 'microseconds'")
@@ -62,6 +70,8 @@ class Interval(object):
         """Define a representation for the object."""
         if self.every == 1:
             return 'every {0.period_singular}'.format(self)
+        elif self.every == 0 and self.period is None:
+            return None
         return 'every {0.every} {0.period}'.format(self)
 
     def to_dict(self):
@@ -124,65 +134,192 @@ class Crontab(object):
 class TaskModel(object):
     """Task model."""
 
-    name = None
-    task = None
+    def __init__(self, **kwargs):
+        """Initialize this event."""
+        self.start_attrs = [
+            'name', 'task', 'interval', 'crontab', 'args', 'kwargs', 'queue',
+            'exchange', 'routing_key', 'soft_time_limit', 'expires', 'enabled',
+            'last_run_at', 'total_run_count', 'date_changed', 'description'
+        ]
 
-    interval = Interval()
-    crontab = Crontab()
+        for item in self.start_attrs:
+            setattr(self, item, kwargs.get(item, None))
 
-    args = None
-    kwargs = None
-
-    queue = None
-    exchange = None
-    routing_key = None
-    soft_time_limit = None
-
-    expires = None
-    enabled = None
-
-    last_run_at = None
-
-    total_run_count = None
-
-    date_changed = None
-    description = None
-
-    run_immediately = False
+        self.run_immediately = False
 
     def validate(self):
-        """Validation to ensure that you only have
-        an interval or crontab schedule, but not both simultaneously."""
-        if self.interval and self.crontab:
+        """Validation function.
+
+        There can be an interval or crontab schedule,
+        but not both simultaneously.
+        """
+        if self.interval is not None and self.crontab is not None:
             msg = 'Cannot define both interval and crontab schedule.'
             raise ValueError(msg)
-        if not (self.interval or self.crontab):
+        if self.interval is None and self.crontab is None:
             msg = 'Must defined either interval or crontab schedule.'
             raise ValueError(msg)
 
     @property
     def schedule(self):
-        if self.interval:
+        """Schedule property."""
+        self.validate()
+        if self.interval is not None:
             return self.interval.schedule
-        elif self.crontab:
+        elif self.crontab is not None:
             return self.crontab.schedule
-        else:
-            raise Exception("must define interval or crontab schedule")
 
     def __unicode__(self):
+        """Define a representation for the object."""
+        self.validate()
         fmt = '{0.name}: {{no schedule}}'
-        if self.interval:
+        if self.interval is not None:
             fmt = '{0.name}: {0.interval}'
-        elif self.crontab:
+        elif self.crontab is not None:
             fmt = '{0.name}: {0.crontab}'
-        else:
-            raise Exception("must define interval or crontab schedule")
+
         return fmt.format(self)
+
+    def to_dict(self):
+        """Serialize this object to a dict."""
+        data = {}
+        for attr in self.start_attrs:
+            data.update({attr: getattr(self, attr)})
+
+        return data
+
+    @classmethod
+    def from_dict(cls, data):
+        """Deserialize from a dict."""
+        result = cls()
+        for attr in cls.start_attrs:
+            setattr(result, attr, data.get(attr))
+
+        return result
 
 
 class EventEntry(ScheduleEntry):
-    pass
+    """An entry model for the Celery Beat scheduler."""
+
+    def __init__(self, task):
+        """Initialize the task."""
+        self._task = task
+
+        self.app = current_app._get_current_object()
+        self.name = self._task.name
+        self.task = self._task.task
+
+        self.schedule = self._task.schedule
+
+        self.args = self._task.args
+        self.kwargs = self._task.kwargs
+        self.options = {
+            'queue': self._task.queue,
+            'exchange': self._task.exchange,
+            'routing_key': self._task.routing_key,
+            'expires': self._task.expires,
+            'soft_time_limit': self._task.soft_time_limit
+        }
+
+        if self._task.total_run_count is None:
+            self._task.total_run_count = 0
+        self.total_run_count = self._task.total_run_count
+
+        if not self._task.last_run_at:
+            self._task.last_run_at = self._default_now()
+        self.last_run_at = self._task.last_run_at
+
+    def _default_now(self):
+        return self.app.now()
+
+    def next(self):
+        """Get the next task."""
+        self._task.last_run_at = self.app.now()
+        self._task.total_run_count += 1
+        self._task.run_immediately = False
+        return self.__class__(self._task)
+
+    __next__ = next
+
+    def is_due(self):
+        """Check if the task is due."""
+        if not self._task.enabled:
+            return False, 5.0   # 5 second delay for re-enable.
+        if self._task.run_immediately:
+            # figure out when the schedule would run next anyway
+            _, n = self.schedule.is_due(self.last_run_at)
+            return True, n
+        return self.schedule.is_due(self.last_run_at)
+
+    def __repr__(self):
+        """Define a representation for the object."""
+        return u'<EventScheduleEntry ({0} {1}(*{2}, **{3}) {{4}})>'.format(
+            self.name, self.task, self.args,
+            self.kwargs, self.schedule,
+        )
+
+    def reserve(self, entry):
+        """Reserve the task."""
+        new_entry = Scheduler.reserve(self, entry)
+        return new_entry
+
+    def save(self):
+        """Save this event to the store."""
+        if self.total_run_count > self._task.total_run_count:
+            self._task.total_run_count = self.total_run_count
+        if (self.last_run_at and
+                self._task.last_run_at and
+                self.last_run_at > self._task.last_run_at):
+            self._task.last_run_at = self.last_run_at
+        self._task.run_immediately = False
+        event_store.put(self._task.to_dict())
 
 
 class EventScheduler(Scheduler):
-    pass
+    """A scheduler for Celery Beat."""
+
+    Entry = EventEntry
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the scheduler."""
+        self._schedule = {}
+        self._last_updated = None
+        Scheduler.__init__(self, *args, **kwargs)
+        self.max_interval = (kwargs.get('max_interval') or
+                             self.app.conf.CELERYBEAT_MAX_LOOP_INTERVAL or
+                             5)
+
+    def setup_schedule(self):
+        pass
+
+    def requires_update(self):
+        """Check if we should pull an updated schedule from the event store."""
+        if not self._last_updated:
+            return True
+        return self._last_updated + Config.UPDATE_INTERVAL \
+            < datetime.datetime.now()
+
+    def get_from_eventstore(self):
+        """Load all the events in the store."""
+        self.sync()
+        d = {}
+        for doc in event_store.all():
+            d[doc.name] = EventEntry(doc)
+        return d
+
+    @property
+    def schedule(self):
+        """Schedule property."""
+        if self.requires_update():
+            self._schedule = self.get_from_eventstore()
+            self._last_updated = datetime.datetime.now()
+        return self._schedule
+
+    def sync(self):
+        """Dump the current schedule status to the event store."""
+        for entry in self._schedule.values():
+            entry.save()
+
+    def apply_async(self):
+        """Dispatch a task for execution."""
+        pass

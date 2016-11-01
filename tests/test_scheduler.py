@@ -2,13 +2,16 @@
 
 import unittest
 
-from tentacle.tentacle.scheduler import Interval, Crontab, TaskModel
+from tentacle.tentacle.scheduler import (Interval, Crontab, TaskModel)
 
 
 class TestHelperObjects(unittest.TestCase):
     """Used to test Interval and Crontab objects."""
 
     def test_interval_init(self):
+        pass
+
+    def test_interval_wrong_data(self):
         pass
 
     def test_interval_serializing(self):
@@ -36,7 +39,16 @@ class TestTaskModel(unittest.TestCase):
     def test_validate(self):
         pass
 
+    def test_no_period(self):
+        pass
+
+    def test_invalid_period(self):
+        pass
+
     def test_schedule(self):
+        pass
+
+    def test_no_schedule_period(self):
         pass
 
 

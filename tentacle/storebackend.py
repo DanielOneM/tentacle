@@ -4,7 +4,7 @@ import inspect
 import sys
 from abc import ABCMeta, abstractmethod
 
-from .config import Config, get_logger
+from config import get_logger
 
 
 logger = get_logger('tentacle')
@@ -45,11 +45,17 @@ class BaseBackend(object):
         """Abstract delete method."""
         pass
 
+    @abstractmethod
+    def all(self):
+        """Abstract all method."""
+        pass
+
 
 class DummyBackend(BaseBackend):
     """Dummy adaptor used to simulate a store backend."""
 
     def __init__(self):
+        """Initialize the backend."""
         self.store = {}
 
     def get(self, key):
@@ -64,6 +70,10 @@ class DummyBackend(BaseBackend):
     def update(self, key, value):
         if value != self.store.get(key):
             self.put(key, value)
+
+    def all(self):
+        for item in self.store.values():
+            yield item
 
 
 class AerospikeBackend(BaseBackend):
@@ -83,4 +93,10 @@ class AerospikeBackend(BaseBackend):
         pass
 
     def delete(self, key):
+        pass
+
+    def search(self, key, **kwargs):
+        pass
+
+    def all(self):
         pass

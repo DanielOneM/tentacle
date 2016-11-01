@@ -2,7 +2,8 @@
 
 import inspect
 
-from .storebackend import get_backend
+from storebackend import get_backend
+from config import Config
 
 
 class EventStore(object):
@@ -28,3 +29,5 @@ class EventStore(object):
         for item in backend_functions:
             if '__' not in item[0] and '_' not in item[0]:
                 setattr(self, item[0], item[1])
+
+event_store = EventStore(Config.DEFAULT_BACKEND)

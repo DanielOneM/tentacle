@@ -1,9 +1,10 @@
 """Worker used to handle changes in the event repository."""
+
 from celery import Celery
 from celery import bootsteps
 from kombu import Consumer
 
-from .config import Config, get_logger
+from config import Config, get_logger
 
 logger = get_logger('tentacle')
 
@@ -25,13 +26,14 @@ class EndpointConsumer(bootsteps.ConsumerStep):
         """Overriding class method."""
         if 'action' not in message.body:
             # message does not have an action, reject it
+            logger.info('Received msg with no action. Rejecting it.')
             message.reject()
         else:
             body = message.body
             action = body.get('action')
-            kwargs = body.get('kwargs')
+            task_payload = body.get('task')
 
-            app.tasks['tentacle.tasks.' + action].delay(**kwargs)
+            app.tasks['tentacle.endpointtasks.' + action].delay(task_payload)
             message.ack()
 
 
