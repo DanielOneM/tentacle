@@ -1,15 +1,21 @@
 """Model used to store events."""
 
 import datetime
+import uuid
+import traceback
 
 import celery.schedules
 from celery.beat import Scheduler, ScheduleEntry
 from celery import current_app
 
 from store import event_store
-from config import Config
+from dispatcher import event_dispatcher
+from config import Config, get_logger
 
-# Possible values for PeriodicTask.Interval.period
+
+logger = get_logger('tentacle')
+
+# Possible values for a period
 PERIODS = ('days', 'hours', 'minutes', 'seconds', 'microseconds')
 
 
@@ -81,6 +87,9 @@ class Interval(object):
     @classmethod
     def from_dict(cls, data):
         """Deserialize from a dict."""
+        if data is None:
+            return None
+
         result = cls()
         result._every = data['every']
         result._period = data['period']
@@ -124,6 +133,9 @@ class Crontab(object):
     @classmethod
     def from_dict(cls, data):
         """Deserialize from a dict."""
+        if data is None:
+            return None
+
         result = cls()
         for key in ['minute', 'hour', 'day_of_week',
                     'day_of_month', 'month_of_year']:
@@ -132,18 +144,48 @@ class Crontab(object):
 
 
 class TaskModel(object):
-    """Task model."""
+    """Task model.
+
+    Use this model to save a received event to the event store.
+
+    Attributes:
+        id              - unique name for the task, automatically generated
+        worker_type     - type of worker that will handle the task
+        task            - function or method name with full dotted path
+        interval        - periodicity set as interval
+        crontab         - periodicity set as crontab
+        args            - any arguments for the task
+        kwargs          - any keyword arguments for the task
+        exhange         - destination exchange for this task
+        routing_key     - destination routing_key for this task
+        expires         - expiration date for task execution
+        enabled         - if the task can be executed
+        last_run_at     - timestamp when the task was executed last time
+        total_run_count - how many times has the task been run
+        date_changed    - timestamp when the task was changed
+        description     - optional description
+    """
 
     def __init__(self, **kwargs):
         """Initialize this event."""
         self.start_attrs = [
-            'name', 'task', 'interval', 'crontab', 'args', 'kwargs', 'queue',
-            'exchange', 'routing_key', 'soft_time_limit', 'expires', 'enabled',
+            'id', 'task', 'interval', 'crontab', 'args', 'kwargs',
+            'exchange', 'routing_key', 'expires', 'enabled', 'worker_type'
             'last_run_at', 'total_run_count', 'date_changed', 'description'
         ]
 
         for item in self.start_attrs:
-            setattr(self, item, kwargs.get(item, None))
+            if item == 'interval':
+                value = Interval().from_dict(kwargs.get(item, None))
+            elif item == 'crontab':
+                value = Crontab().from_dict(kwargs.get(item, None))
+            else:
+                value = kwargs.get(item, None)
+
+            setattr(self, item, value)
+
+        if 'id' not in kwargs:
+            self.id = str(uuid.uuid4())
 
         self.run_immediately = False
 
@@ -184,7 +226,9 @@ class TaskModel(object):
         """Serialize this object to a dict."""
         data = {}
         for attr in self.start_attrs:
-            data.update({attr: getattr(self, attr)})
+            if len(attr) > 14:
+                cut_attr = attr.replace('_', '')
+            data.update({cut_attr: getattr(self, attr)})
 
         return data
 
@@ -193,7 +237,11 @@ class TaskModel(object):
         """Deserialize from a dict."""
         result = cls()
         for attr in cls.start_attrs:
-            setattr(result, attr, data.get(attr))
+            if attr.replace('_', '') in data:
+                value = data.get(attr.replace('_', ''))
+            else:
+                value = data.get(attr, None)
+            setattr(result, attr, value)
 
         return result
 
@@ -279,6 +327,7 @@ class EventScheduler(Scheduler):
     """A scheduler for Celery Beat."""
 
     Entry = EventEntry
+    dispatcher = event_dispatcher
 
     def __init__(self, *args, **kwargs):
         """Initialize the scheduler."""
@@ -304,7 +353,7 @@ class EventScheduler(Scheduler):
         self.sync()
         d = {}
         for doc in event_store.all():
-            d[doc.name] = EventEntry(doc)
+            d[doc.id] = EventEntry(doc)
         return d
 
     @property
@@ -320,6 +369,13 @@ class EventScheduler(Scheduler):
         for entry in self._schedule.values():
             entry.save()
 
-    def apply_async(self):
+    def apply_entry(self, entry, producer=None):
         """Dispatch a task for execution."""
-        pass
+        logger.info('Scheduler: Sending task %s (%s)', entry.id, entry.task)
+        try:
+            self.dispatcher.dispatch(entry.to_dict())
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.error('Message Error: %s\n%s',
+                         exc, traceback.format_stack(), exc_info=True)
+        else:
+            logger.debug('%s sent', entry.task)

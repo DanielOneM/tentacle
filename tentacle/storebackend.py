@@ -2,9 +2,16 @@
 
 import inspect
 import sys
+import time
+try:
+    import cPickle
+except:
+    import pickle as cPickle
 from abc import ABCMeta, abstractmethod
 
-from config import get_logger
+import aerospike
+
+from config import Config, get_logger
 
 
 logger = get_logger('tentacle')
@@ -81,22 +88,73 @@ class AerospikeBackend(BaseBackend):
 
     def __init__(self):
         """Initialize the backend."""
-        pass
+        self.client = aerospike.client(Config.AEROSPIKE_CONFIG) \
+            .connect(Config.AEROSPIKE_USERNAME,
+                     Config.AEROSPIKE_PASSWORD)
+        self.close_at = (
+            None if Config.AEROSPIKE_CONN_MAX_AGE is None
+            else time.time() + Config.AEROSPIKE_CONN_MAX_AGE
+        )
+
+    def get_key(self, key):
+        """Return Aerospike specific key."""
+        return (Config.AEROSPIKE_NAMESPACE, 'tasks', key)
 
     def put(self, key, value):
-        pass
+        """Put a task in the event repository.
+
+        :param ttl: seconds time to live - defaults to settings.SESSION_TTL
+        :type ttl: int
+        """
+        _key = self.get_key(key)
+        meta = {
+            'ttl': Config.SESSION_TTL
+        }
+        try:
+            self.client.put(_key, value, meta=meta)
+        except aerospike.exception.BinNameError:
+            logger.debug('A bin name should not exceed 14 characters limit')
+            logger.debug([(x, len(x)) for x in value.keys() if len(x) > 14])
+            raise aerospike.exception.BinNameError
 
     def get(self, key):
-        pass
+        """Retrieve a task."""
+        _key = self.get_key(key)
+        try:
+            _key, meta, bins = self.client.get(_key)
+        except aerospike.exception.RecordNotFound:
+            return None
+        except cPickle.UnpicklingError:
+            logger.debug('Unpickling error occurred. Bins:\n%s', bins)
+            return None
+        return bins
 
     def update(self, key, value):
-        pass
+        """Update a task."""
+        self.put(key, value)
 
     def delete(self, key):
-        pass
+        """Delete a task from the repository."""
+        try:
+            _key = self.get_key(key)
+            self.client.remove(_key)
+        except aerospike.exception.RecordNotFound:
+            pass
 
-    def search(self, key, **kwargs):
-        pass
+    def search(self, **kwargs):
+        """Return a list of tasks that matches the search kwargs."""
+        query = self.client.query(Config.AEROSPIKE_NAMESPACE, 'tasks')
+        args = (aerospike.predicates.equals(item[0], item[1])
+                for item in kwargs.values())
+        query.where(*args)
+        return query.results()
 
     def all(self):
-        pass
+        """Return all tasks in the repository."""
+        query = self.client.query(Config.AEROSPIKE_NAMESPACE, 'tasks')
+        return query.results()
+
+    def close(self):
+        """Close the connection."""
+        self.client.close()
+        self.client = None
