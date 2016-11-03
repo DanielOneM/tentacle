@@ -79,8 +79,7 @@ class DummyBackend(BaseBackend):
             self.put(key, value)
 
     def all(self):
-        for item in self.store.values():
-            yield item
+        return [item for item in self.store.values()]
 
 
 class AerospikeBackend(BaseBackend):
@@ -98,7 +97,7 @@ class AerospikeBackend(BaseBackend):
 
     def get_key(self, key):
         """Return Aerospike specific key."""
-        return (Config.AEROSPIKE_NAMESPACE, 'tasks', key)
+        return (Config.AEROSPIKE_NAMESPACE, Config.AEROSPIKE_SETNAME, key)
 
     def put(self, key, value):
         """Put a task in the event repository.

@@ -50,6 +50,7 @@ class TestEventStore(unittest.TestCase):
         self.evstore.put('key', 'value')
 
         value = self.evstore.get('key')
+        print value
         self.assertIsNot(value, None)
         self.assertEqual(value, 'value')
 

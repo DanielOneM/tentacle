@@ -1,7 +1,8 @@
-"""Worker tasks used to handle Event Repository endpoints."""
+"""Tasks used to handle Event Repository endpoints."""
 
 from endpointworker import app
 from store import event_store
+from taskmodel import TaskModel
 from config import get_logger
 
 logger = get_logger('tentacle')
@@ -10,7 +11,13 @@ logger = get_logger('tentacle')
 @app.task
 def put(task_payload):
     """Endpoint used to register an event."""
-    event_store.put(task_payload)
+    try:
+        payload = TaskModel(**task_payload)
+        payload.validate()
+    except ValueError:
+        return 'nok'
+
+    event_store.put(payload.name, payload.to_dict())
     return 'ok'
 
 
@@ -24,6 +31,19 @@ def get(task_id):
 @app.task
 def update(task_id, task_payload):
     """Endpoint used to update a registered event."""
+    if 'name' not in task_payload:
+        task_payload.update({'name': task_id})
+
+    try:
+        payload = TaskModel(**task_payload)
+        payload.validate()
+    except ValueError:
+        return 'nok'
+
+    stored = get(task_id)
+    if stored is None:
+        return 'nok'
+
     event_store.update(task_id, task_payload)
     return 'ok'
 

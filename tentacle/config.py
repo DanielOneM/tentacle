@@ -97,7 +97,8 @@ class Config(object):
         'compression_threshold': 0
     }
 
-    AEROSPIKE_NAMESPACE = 'nautilus'
+    AEROSPIKE_NAMESPACE = 'test'
+    AEROSPIKE_SETNAME = 'tasks'
     AEROSPIKE_USERNAME = None
     AEROSPIKE_PASSWORD = None
     # The lifetime of a database connection, in seconds. Use 0 to close database connections at the end of each task

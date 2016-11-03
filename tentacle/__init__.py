@@ -1,6 +1,7 @@
 """Tentacle main module."""
 
-from .eventdispatcher import *
-from .eventstore import *
-from .endpointtasks import *
-from .endpointworker import *
+from dispatcher import *
+from store import *
+from endpointtasks import *
+from endpointworker import *
+from scheduler import *
