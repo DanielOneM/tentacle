@@ -43,11 +43,6 @@ class BaseBackend(object):
         pass
 
     @abstractmethod
-    def update(self, key, value):
-        """Abstract update method."""
-        pass
-
-    @abstractmethod
     def delete(self, key):
         """Abstract delete method."""
         pass
@@ -73,10 +68,6 @@ class DummyBackend(BaseBackend):
 
     def delete(self, key):
         self.store.pop(key)
-
-    def update(self, key, value):
-        if value != self.store.get(key):
-            self.put(key, value)
 
     def all(self):
         return [item for item in self.store.values()]
@@ -128,10 +119,6 @@ class AerospikeBackend(BaseBackend):
             return None
         return bins
 
-    def update(self, key, value):
-        """Update a task."""
-        self.put(key, value)
-
     def delete(self, key):
         """Delete a task from the repository."""
         try:
@@ -142,16 +129,30 @@ class AerospikeBackend(BaseBackend):
 
     def search(self, **kwargs):
         """Return a list of tasks that matches the search kwargs."""
-        query = self.client.query(Config.AEROSPIKE_NAMESPACE, 'tasks')
+        query = self.client.query(Config.AEROSPIKE_NAMESPACE,
+                                  Config.AEROSPIKE_SETNAME)
         args = (aerospike.predicates.equals(item[0], item[1])
                 for item in kwargs.values())
         query.where(*args)
-        return query.results()
+        try:
+            results = query.results()
+            return results
+        except aerospike.exception.RecordNotFound:
+            logger.info('No records found in db.')
+
+        return []
 
     def all(self):
         """Return all tasks in the repository."""
-        query = self.client.query(Config.AEROSPIKE_NAMESPACE, 'tasks')
-        return query.results()
+        query = self.client.query(Config.AEROSPIKE_NAMESPACE,
+                                  Config.AEROSPIKE_SETNAME)
+        try:
+            results = query.results()
+            return results
+        except aerospike.exception.RecordNotFound:
+            logger.info('No records found in db.')
+
+        return []
 
     def close(self):
         """Close the connection."""

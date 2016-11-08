@@ -44,9 +44,9 @@ class EventStore(object):
         def internal_methd(*args, **kwargs):
             result = mthd(*args, **kwargs)
             if isinstance(result, dict):
-                return TaskModel(result)
+                return TaskModel(**result)
             elif isinstance(result, list):
-                return [TaskModel(item) for item in result]
+                return [TaskModel(**item) for item in result]
             else:
                 return result
 

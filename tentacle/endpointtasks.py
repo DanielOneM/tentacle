@@ -1,4 +1,4 @@
-"""Tasks used to handle Event Repository endpoints."""
+"""Event Repository endpoints."""
 
 from endpointworker import app
 from store import event_store
@@ -13,7 +13,6 @@ def put(task_payload):
     """Endpoint used to register an event."""
     try:
         payload = TaskModel(**task_payload)
-        payload.validate()
     except ValueError:
         return 'nok'
 
@@ -31,20 +30,20 @@ def get(task_id):
 @app.task
 def update(task_id, task_payload):
     """Endpoint used to update a registered event."""
-    if 'name' not in task_payload:
-        task_payload.update({'name': task_id})
+    response = get(task_id)
+
+    if response is None:
+        return 'nok'
+
+    for item in task_payload:
+        setattr(response, item, task_payload[item])
 
     try:
-        payload = TaskModel(**task_payload)
-        payload.validate()
+        response.validate()
     except ValueError:
         return 'nok'
 
-    stored = get(task_id)
-    if stored is None:
-        return 'nok'
-
-    event_store.update(task_id, task_payload)
+    event_store.put(task_id, response.to_dict())
     return 'ok'
 
 

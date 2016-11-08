@@ -106,18 +106,17 @@ class EventScheduler(Scheduler):
                              self.app.conf.CELERYBEAT_MAX_LOOP_INTERVAL or
                              5)
 
-    def setup_schedule(self):
-        pass
-
     def requires_update(self):
         """Check if we should pull an updated schedule from the event store."""
         if not self._last_updated:
             return True
-        return self._last_updated + Config.UPDATE_INTERVAL \
+        return self._last_updated + \
+            datetime.timedelta(seconds=Config.DEFAULT_UPDATE_INTERVAL) \
             < datetime.datetime.now()
 
     def get_from_eventstore(self):
         """Load all the events in the store."""
+        logger.debug('Updating schedule.')
         self.sync()
         d = {}
         for doc in event_store.all():

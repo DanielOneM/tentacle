@@ -2,8 +2,8 @@
 
 import unittest
 
-from tentacle.tentacle.store import EventStore
-from tentacle.tentacle.storebackend import DummyBackend
+from tentacle.store import EventStore
+from tentacle.storebackend import DummyBackend
 
 
 class TestEventStore(unittest.TestCase):
@@ -50,18 +50,8 @@ class TestEventStore(unittest.TestCase):
         self.evstore.put('key', 'value')
 
         value = self.evstore.get('key')
-        print value
         self.assertIsNot(value, None)
         self.assertEqual(value, 'value')
-
-    def test_update(self):
-        """Check the update method."""
-        self.evstore.put('key', 'value')
-        self.evstore.update('key', 'newvalue')
-
-        value = self.dummy.get('key')
-        self.assertIsNot(value, None)
-        self.assertEqual(value, 'newvalue')
 
     def test_delete(self):
         """Check the delete method."""

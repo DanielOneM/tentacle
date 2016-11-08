@@ -1,7 +1,7 @@
 """Unit tests for the Event Dispatcher."""
 import unittest
 
-from tentacle.tentacle.dispatcher import EventDispatcher
+from tentacle.dispatcher import EventDispatcher
 from kombu import Connection
 
 

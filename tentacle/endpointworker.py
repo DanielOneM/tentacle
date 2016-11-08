@@ -2,7 +2,7 @@
 
 from celery import Celery
 from celery import bootsteps
-from kombu import Consumer
+from kombu import Consumer, Queue
 
 from config import Config, get_logger
 
@@ -18,7 +18,7 @@ class EndpointConsumer(bootsteps.ConsumerStep):
     def get_consumers(self, channel):
         """Overriding class method."""
         return [Consumer(channel,
-                         queues=[Config.DEFAULT_QUEUE],
+                         queues=[Queue(Config.CELERY_DEFAULT_QUEUE)],
                          on_message=self.on_message,
                          tag_prefix='tentacle',)]
 

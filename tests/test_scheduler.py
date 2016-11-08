@@ -2,7 +2,7 @@
 
 import unittest
 
-from tentacle.tentacle.scheduler import (EventEntry, EventScheduler)
+from tentacle.schedulers import (EventEntry, EventScheduler)
 
 
 class TestEventEntry(unittest.TestCase):

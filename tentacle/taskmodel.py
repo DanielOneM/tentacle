@@ -183,6 +183,7 @@ class TaskModel(object):
             self.name = str(uuid.uuid4())
 
         self.run_immediately = False
+        self.validate()
 
     def validate(self):
         """Validation function.
@@ -200,7 +201,6 @@ class TaskModel(object):
     @property
     def schedule(self):
         """Schedule property."""
-        self.validate()
         if self.interval is not None:
             return self.interval.schedule
         elif self.crontab is not None:

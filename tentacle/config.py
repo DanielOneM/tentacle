@@ -1,7 +1,6 @@
 """Config file for Tentacle."""
 
 import aerospike
-
 from celery.utils.log import get_logger
 
 logger = get_logger('tentacle')
@@ -97,7 +96,7 @@ class Config(object):
         'compression_threshold': 0
     }
 
-    AEROSPIKE_NAMESPACE = 'test'
+    AEROSPIKE_NAMESPACE = 'bar'
     AEROSPIKE_SETNAME = 'tasks'
     AEROSPIKE_USERNAME = None
     AEROSPIKE_PASSWORD = None

@@ -1,7 +1,13 @@
 """Tentacle main module."""
 
-from dispatcher import *
-from store import *
-from endpointtasks import *
-from endpointworker import *
-from scheduler import *
+# from __future__ import absolute_import
+
+from endpointworker import app
+from schedulers import EventScheduler
+from config import Config
+
+__all__ = [
+    'Config',
+    'EventScheduler',
+    'app'
+]
