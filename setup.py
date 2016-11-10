@@ -12,7 +12,7 @@ config = {
     'download_url': 'https://github.com/ONEmCommunications/tentacle.git',
     'author_email': 'daniel.enache@onem.com',
     'version': '0.1',
-    'install_requires': ['nose'],
+    'install_requires': [],
     'packages': find_packages(),
     'scripts': [],
     'name': 'tentacle'

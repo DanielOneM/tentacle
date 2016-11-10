@@ -28,16 +28,20 @@ class Interval(object):
     @every.setter
     def every(self, value):
         """Property setter."""
+        val = 0
         if value is None:
-            self._every = 0
+            self._every = val
             return
 
         try:
             val = int(value)
-            if val < 0:
-                raise ValueError()
         except Exception:
-            raise ValueError("value must be an integer greater or equal to 0.")
+            raise ValueError("Value must be a positive integer.")
+
+        if val < 0:
+            raise ValueError("Value must be a positive integer.")
+
+        self._every = val
 
     @property
     def period(self):

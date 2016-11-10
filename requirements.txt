@@ -1,6 +1,12 @@
+aerospike==2.0.5
 amqp==1.4.9
 anyjson==0.3.3
 billiard==3.3.0.23
 celery==3.1.24
 kombu==3.0.37
+msgpack-python==0.4.7
+nose2==0.6.5
 pytz==2016.7
+siren==0.0.post0.dev19+na4414dc
+six==1.10.0
+tinyrpc==0.5
