@@ -17,7 +17,7 @@ class TestEndpointTasks(unittest.TestCase):
         self.task_payload = TaskModel(**{
             'name': 'something',
             'worker_type': 'nautilus',
-            'interval': {'every': 'days', 'period': '7'}
+            'interval': {'every': '7', 'period': 'days'}
         })
 
     def tearDown(self):

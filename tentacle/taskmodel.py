@@ -90,8 +90,8 @@ class Interval(object):
             return None
 
         result = cls()
-        result._every = data['every']
-        result._period = data['period']
+        result.every = data['every']
+        result.period = data['period']
         return result
 
 
@@ -183,7 +183,7 @@ class TaskModel(object):
 
             setattr(self, item, value)
 
-        if 'name' not in kwargs:
+        if 'name' not in kwargs or self.name is None:
             self.name = str(uuid.uuid4())
 
         self.run_immediately = False

@@ -90,42 +90,87 @@ class TestHelperObjects(unittest.TestCase):
 
         self.assertIsInstance(i.schedule, celery.schedules.schedule)
 
-    def test_crontab_init(self):
-        """Correct initialization."""
-        pass
-
-    def test_crontab_bad_data(self):
-        """Exception when initializing with bad data."""
-        pass
-
     def test_crontab_serializing(self):
         """Correct serialization."""
-        pass
+        crtab = {
+            'minute': '1',
+            'hour': '1',
+            'day_of_week': '1',
+            'day_of_month': '1',
+            'month_of_year': '1'
+        }
+
+        sch = Crontab.from_dict(crtab)
+        self.assertEqual(sch.to_dict(), crtab)
 
     def test_crontab_deserializing(self):
         """Correct deserialization."""
-        pass
+        crtab = {
+            'minute': '1',
+            'hour': '1',
+            'day_of_week': '1',
+            'day_of_month': '1',
+            'month_of_year': '1'
+        }
+
+        sch = Crontab.from_dict(crtab)
+        self.assertIsInstance(sch, Crontab)
+        self.assertEqual(sch.minute, crtab['minute'])
 
 
 class TestTaskModel(unittest.TestCase):
     """Used to test the TaskModel object."""
 
+    def setUp(self):
+        """Initializing common objects."""
+        self.task = {
+            'name': 'something',
+            'worker_type': 'kraken',
+            'task': 'something',
+            'interval': {'every': 7, 'period': 'days'},
+            'crontab': None
+        }
+
     def test_init(self):
         """Correct initialization."""
-        pass
+        tsk = TaskModel(**self.task)
 
-    def test_validate(self):
-        """All attributes must validate."""
-        pass
+        self.assertEqual(tsk.name, 'something')
+        self.assertEqual(tsk.worker_type, 'kraken')
+        self.assertIsNone(tsk.description)
+        self.assertIsNone(tsk.crontab)
+        self.assertIsNotNone(tsk.interval)
+        self.assertEqual(tsk.run_immediately, False)
+
+    def test_init_no_name(self):
+        """Initializing without a name."""
+        self.task['name'] = None
+        tsk = TaskModel(**self.task)
+        self.task.pop('name')
+        tsk2 = TaskModel(**self.task)
+
+        self.assertIsNotNone(tsk.name)
+        self.assertIsNotNone(tsk2.name)
+        self.assertNotEqual(tsk.name, tsk2.name)
 
     def test_invalid_no_attribs(self):
         """Exception when there's no interval and no crontab."""
-        pass
+        self.task['interval'] = None
+
+        self.assertRaisesRegexp(ValueError,
+                                'Must define either interval or crontab schedule.',
+                                TaskModel, **self.task)
 
     def test_invalid_too_many_attribs(self):
         """Exception when there's both interval and crontab."""
-        pass
+        self.task['crontab'] = {}
+
+        self.assertRaisesRegexp(ValueError,
+                                'Cannot define both interval and crontab schedule.',
+                                TaskModel, **self.task)
 
     def test_schedule(self):
         """Correct schedule is used."""
-        pass
+        tsk = TaskModel(**self.task)
+
+        self.assertIsInstance(tsk.schedule, celery.schedules.schedule)
