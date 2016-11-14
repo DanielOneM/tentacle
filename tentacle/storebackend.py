@@ -78,9 +78,8 @@ class AerospikeBackend(BaseBackend):
 
     def __init__(self):
         """Initialize the backend."""
-        self.client = aerospike.client(Config.AEROSPIKE_CONFIG) \
-            .connect(Config.AEROSPIKE_USERNAME,
-                     Config.AEROSPIKE_PASSWORD)
+        self.connection = aerospike.client(Config.AEROSPIKE_CONFIG)
+        self._client = None
         self.close_at = (
             None if Config.AEROSPIKE_CONN_MAX_AGE is None
             else time.time() + Config.AEROSPIKE_CONN_MAX_AGE
@@ -89,6 +88,14 @@ class AerospikeBackend(BaseBackend):
     def get_key(self, key):
         """Return Aerospike specific key."""
         return (Config.AEROSPIKE_NAMESPACE, Config.AEROSPIKE_SETNAME, key)
+
+    @property
+    def client(self):
+        """Lazy connection setup."""
+        if self._client is None:
+            self._client = self.connection.connect(Config.AEROSPIKE_USERNAME,
+                                                   Config.AEROSPIKE_PASSWORD)
+        return self._client
 
     def put(self, key, value):
         """Put a task in the event repository.

@@ -65,6 +65,9 @@ class TestEventDispatcher(unittest.TestCase):
         self.assertRaisesRegexp(ValueError,
                                 'Task cannot be None.',
                                 self.evdisp.dispatch, None)
+        self.assertRaisesRegexp(ValueError,
+                                'No connection for invalid worker type.',
+                                self.evdisp.dispatch, {'worker_type': 'test'})
 
         # TODO: in order to test the actual dispatch,
         # I would have to mock the connection and check for delivered messages

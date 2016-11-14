@@ -6,7 +6,7 @@ from celery.utils.log import get_logger
 logger = get_logger('tentacle')
 
 
-class Config(object):
+class BaseConf(object):
     """Config object used to setup Celery."""
 
     CELERY_ENABLE_UTC = True  # if set to false system local timezone is used
@@ -24,8 +24,8 @@ class Config(object):
     CELERY_DEFAULT_QUEUE = 'tentacle'
     CELERY_DEFAULT_ROUTING_KEY = 'tentacle'
 
-    # default backend for event store
-    DEFAULT_BACKEND = 'aerospike'
+    # default backend settings for event store
+    DEFAULT_BACKEND = None
     DEFAULT_UPDATE_INTERVAL = 5
 
     # Kraken connection data
@@ -57,6 +57,12 @@ class Config(object):
         port=NAUTILUS_PORT,
         vhost=NAUTILUS_VHOST
     )
+
+
+class ProdConf(BaseConf):
+    """Production version of the base Config."""
+
+    DEFAULT_BACKEND = 'aerospike'
 
     AEROSPIKE_CONFIG = {
         # tuples identifying multiple nodes in the cluster
@@ -96,10 +102,14 @@ class Config(object):
         'compression_threshold': 0
     }
 
-    AEROSPIKE_NAMESPACE = 'bar'
+    AEROSPIKE_NAMESPACE = 'test'
     AEROSPIKE_SETNAME = 'tasks'
     AEROSPIKE_USERNAME = None
     AEROSPIKE_PASSWORD = None
     # The lifetime of a database connection, in seconds. Use 0 to close database connections at the end of each task
     # and None for unlimited persistent connections
     AEROSPIKE_CONN_MAX_AGE = None
+
+# change object when switching to production
+# TODO: find cleaner way
+Config = BaseConf

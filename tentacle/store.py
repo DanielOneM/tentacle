@@ -8,6 +8,16 @@ from taskmodel import TaskModel
 from config import Config
 
 
+def get_event_store(app):
+    """Get or set the current event store."""
+    if hasattr(Config, 'DEFAULT_BACKEND'):
+        return None
+    if hasattr(app, 'event_store'):
+        return app.event_store
+    else:
+        app.event_store = EventStore(Config.DEFAULT_BACKEND)
+
+
 class EventStore(object):
     """Used as an event repository."""
 
@@ -51,5 +61,3 @@ class EventStore(object):
                 return result
 
         return internal_methd
-
-event_store = EventStore(Config.DEFAULT_BACKEND)

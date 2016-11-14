@@ -1,11 +1,15 @@
 """Event Repository endpoints."""
 
-from endpointworker import app
-from store import event_store
+from celery import current_app
+
 from taskmodel import TaskModel
+from store import get_event_store
 from config import get_logger
 
 logger = get_logger('tentacle')
+
+app = current_app._get_current_object()
+event_store = get_event_store(app)
 
 
 @app.task
