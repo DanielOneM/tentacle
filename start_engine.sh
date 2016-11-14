@@ -5,5 +5,4 @@ docker run -tid --name rmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
 
 #start the engine
 sleep 10
-celery beat --app=tentacle.endpointworker.app --scheduler=tentacle.schedulers.EventScheduler -l debug 
-# celery worker --app=tentacle.app -l debug
+celery worker --beat --detach --app=tentacle.endpointworker.app --scheduler=tentacle.schedulers.EventScheduler -l info -f eventengine.log

@@ -112,4 +112,4 @@ class ProdConf(BaseConf):
 
 # change object when switching to production
 # TODO: find cleaner way
-Config = BaseConf
+Config = ProdConf

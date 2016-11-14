@@ -6,12 +6,14 @@ import traceback
 from celery.beat import Scheduler, ScheduleEntry
 from celery import current_app
 
-from store import event_store
+from store import get_event_store
 from dispatcher import event_dispatcher
 from config import Config, get_logger
 
 
 logger = get_logger('tentacle')
+
+event_store = get_event_store(current_app._get_current_object())
 
 
 class EventEntry(ScheduleEntry):
