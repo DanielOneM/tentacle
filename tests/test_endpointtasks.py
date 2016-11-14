@@ -3,7 +3,7 @@
 import unittest
 
 from tentacle.store import EventStore
-import tentacle.endpointtasks as endp
+from tentacle.endpointtasks import get, put, update, delete, search
 from tentacle.taskmodel import TaskModel
 
 
@@ -13,7 +13,7 @@ class TestEndpointTasks(unittest.TestCase):
     def setUp(self):
         """Initialize common objects."""
         self.dummy = EventStore(backend='dummy')
-        endp.event_store = self.dummy
+        event_store = self.dummy
         self.task_payload = TaskModel(**{
             'name': 'something',
             'worker_type': 'nautilus',
@@ -27,7 +27,7 @@ class TestEndpointTasks(unittest.TestCase):
 
     def test_put(self):
         """Check the put endpoint."""
-        response = endp.put(self.task_payload.to_dict())
+        response = put(self.task_payload.to_dict())
 
         stored = self.dummy.get('something')
         self.assertEqual(stored.name, 'something')
@@ -35,35 +35,35 @@ class TestEndpointTasks(unittest.TestCase):
 
     def test_put_bad_data(self):
         """Check the returned code is negative."""
-        response = endp.put({})
+        response = put({})
 
         self.assertEqual(response, 'nok')
 
     def test_get(self):
         """Check the get endpoint."""
-        endp.put(self.task_payload.to_dict())
+        put(self.task_payload.to_dict())
 
-        result = endp.get('something')
+        result = get('something')
         self.assertIsInstance(result, TaskModel)
         self.assertEqual(result.name, 'something')
         self.assertEqual(result.worker_type, 'nautilus')
 
     def test_update(self):
         """Check the update endpoint."""
-        endp.put(self.task_payload.to_dict())
-        response = endp.update('something', {'worker_type': 'newsomething'})
+        put(self.task_payload.to_dict())
+        response = update('something', {'worker_type': 'newsomething'})
 
         self.task_payload.worker_type = 'newsomething'
-        result = endp.get('something')
+        result = get('something')
         self.assertEqual(response, 'ok')
         self.assertEqual(result.to_dict(), self.task_payload.to_dict())
 
     def test_delete(self):
         """Check the delete endpoint."""
-        endp.put(self.task_payload.to_dict())
+        put(self.task_payload.to_dict())
         self.assertIsNotNone(self.dummy.get('something'))
 
-        endp.delete('something')
+        delete('something')
         self.assertEqual(self.dummy.get('something'), None)
 
     def test_search(self):

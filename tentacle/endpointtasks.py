@@ -1,5 +1,4 @@
 """Event Repository endpoints."""
-
 from celery import current_app
 
 from taskmodel import TaskModel
@@ -18,6 +17,9 @@ def put(task_payload):
     try:
         payload = TaskModel(**task_payload)
     except ValueError:
+        logger.info('Bad task received: %s',
+                    ','.join('{}:{}'.format(key, task_payload[key])
+                             for key in task_payload))
         return 'nok'
 
     event_store.put(payload.name, payload.to_dict())
@@ -37,6 +39,7 @@ def update(task_id, task_payload):
     response = get(task_id)
 
     if response is None:
+        logger.info('Cannot find task with id %s to update.', task_id)
         return 'nok'
 
     for item in task_payload:
@@ -45,6 +48,9 @@ def update(task_id, task_payload):
     try:
         response.validate()
     except ValueError:
+        logger.info('Cannot update. Bad task received: %s',
+                    ','.join('{}:{}'.format(key, task_payload[key])
+                             for key in task_payload))
         return 'nok'
 
     event_store.put(task_id, response.to_dict())

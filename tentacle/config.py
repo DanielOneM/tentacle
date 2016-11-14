@@ -25,7 +25,7 @@ class BaseConf(object):
     CELERY_DEFAULT_ROUTING_KEY = 'tentacle'
 
     # default backend settings for event store
-    DEFAULT_BACKEND = None
+    DEFAULT_BACKEND = 'dummybackend'
     DEFAULT_UPDATE_INTERVAL = 5
 
     # Kraken connection data
@@ -112,4 +112,4 @@ class ProdConf(BaseConf):
 
 # change object when switching to production
 # TODO: find cleaner way
-Config = ProdConf
+Config = BaseConf
