@@ -2,6 +2,8 @@
 
 import unittest
 
+from celery import current_app
+
 from tentacle.store import EventStore
 from tentacle.storebackend import DummyBackend
 
@@ -11,6 +13,7 @@ class TestEventStore(unittest.TestCase):
 
     def setUp(self):
         """Setup common test objects."""
+        self.app = current_app._get_current_object()
         self.dummy = DummyBackend()
         self.evstore = EventStore(backend=self.dummy)
 

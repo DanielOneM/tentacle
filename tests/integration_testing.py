@@ -1,11 +1,8 @@
 """Test the EventEngine together with Aerospike and RabbitMQ."""
 
 import aerospike
-from siren.serializers import (json_loads, msgpack_loads, json_dumps,
-                               msgpack_dumps)
-from kombu import Queue, Exchange, Connection
-from kombu.exceptions import TimeoutError
-from kombu.serialization import register
+
+from test_utils import (kraken_hit, nautilus_hit)
 
 
 def check_aerospike():
