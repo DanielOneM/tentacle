@@ -5,6 +5,7 @@ from celery import bootsteps
 from kombu import Consumer, Queue
 
 from config import Config, get_logger
+from store import get_event_store
 
 logger = get_logger('tentacle')
 
@@ -40,3 +41,4 @@ class EndpointConsumer(bootsteps.ConsumerStep):
 app = Celery('tentacle')
 app.steps['consumer'].add(EndpointConsumer)
 app.config_from_object(Config)
+app.event_store = get_event_store()

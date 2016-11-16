@@ -60,3 +60,7 @@ class TestEventStore(unittest.TestCase):
 
         self.evstore.delete('key')
         self.assertIsNone(self.evstore.get('key'))
+
+    def test_get_event_store(self):
+        """Check if the correct result gets returned."""
+        pass

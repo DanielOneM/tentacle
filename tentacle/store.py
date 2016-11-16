@@ -3,6 +3,8 @@
 import inspect
 from functools import wraps
 
+from celery import current_app
+
 from storebackend import get_backend
 from taskmodel import TaskModel
 from config import Config
@@ -20,6 +22,8 @@ class EventStore(object):
         if len(kwargs) == 0 and len(args) == 1:
             self.backend = args[0]
 
+        # TODO: check if the backend can reach it's external provider,
+        # if not fall back to the DummyBackend store.
         if self.backend is None:
             raise ValueError('Must specify a backend to use.')
         if isinstance(self.backend, str):
@@ -53,8 +57,10 @@ class EventStore(object):
         return internal_methd
 
 
-def get_event_store(app):
+def get_event_store():
     """Get or set the current event store."""
+    app = current_app._get_current_object()
+
     if not hasattr(Config, 'DEFAULT_BACKEND'):
         return None
     if hasattr(app, 'event_store'):

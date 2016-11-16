@@ -13,7 +13,7 @@ from config import Config, get_logger
 
 logger = get_logger('tentacle')
 
-event_store = get_event_store(current_app._get_current_object())
+event_store = get_event_store()
 
 
 class EventEntry(ScheduleEntry):

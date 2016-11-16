@@ -7,13 +7,31 @@ from kombu import Queue, Exchange, Connection
 from kombu.exceptions import TimeoutError
 from kombu.serialization import register
 
-# check to see if you can reach the aerospike and rabbitmq container
 
-# setup rabbitmq with the appropriate exchanges/queues
+def check_aerospike():
+    """Check to see if aerospike is reachable."""
+    pass
 
-# start the EventEngine
 
-# hit some of the event repository endpoints
+def check_rabbitmq():
+    """Check to see if rabbitmq is reachable."""
+    pass
 
-# check that the events submitted are sent to the appropriate
-# exchanges/queues at the correct times
+
+def check_engine():
+    """Check to see if the Event Engine is working."""
+
+
+def setup_rabbitmq():
+    """Setup rabbitmq exchanges/queues."""
+    pass
+
+
+def test_endpoints():
+    """Check the event repository endpoints."""
+    pass
+
+
+def test_scheduler():
+    """Check that events get scheduled and processed."""
+    pass

@@ -2,9 +2,13 @@
 
 import unittest
 
+from celery import current_app
+
 from tentacle.store import EventStore
 from tentacle.endpointtasks import get, put, update, delete, search
 from tentacle.taskmodel import TaskModel
+
+app = current_app._get_current_object()
 
 
 class TestEndpointTasks(unittest.TestCase):
@@ -13,7 +17,7 @@ class TestEndpointTasks(unittest.TestCase):
     def setUp(self):
         """Initialize common objects."""
         self.dummy = EventStore(backend='dummy')
-        event_store = self.dummy
+        app.event_store = self.dummy
         self.task_payload = TaskModel(**{
             'name': 'something',
             'worker_type': 'nautilus',
@@ -66,6 +70,30 @@ class TestEndpointTasks(unittest.TestCase):
         delete('something')
         self.assertEqual(self.dummy.get('something'), None)
 
-    def test_search(self):
-        """Check the search endpoint."""
-        pass
+    def test_search_bad_query(self):
+        """Test the search endpoint with no kwargs."""
+        put(self.task_payload.to_dict())
+
+        response = search()
+        self.assertEqual(response, 'nok')
+
+    def test_search_partial_kwargs(self):
+        """Check the search endpoint with only one kwarg."""
+        put(self.task_payload.to_dict())
+
+        response = search(task_name='something')
+        self.assertEqual(response[0].to_dict(), self.task_payload.to_dict())
+        response = search(worker_type='nautilus')
+        self.assertEqual(response[0].to_dict(), self.task_payload.to_dict())
+
+    def test_search_full_kwargs(self):
+        """Check result with full kwargs."""
+        put(self.task_payload.to_dict())
+
+        response = search(task_name='something', worker_type='nautilus')
+        self.assertEqual(response[0].to_dict(), self.task_payload.to_dict())
+
+    def test_search_no_results(self):
+        """Check search when there are no results."""
+        response = search(task_name='kraken')
+        self.assertEqual(response, [])

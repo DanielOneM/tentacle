@@ -2,13 +2,11 @@
 from celery import current_app
 
 from taskmodel import TaskModel
-from store import get_event_store
 from config import get_logger
 
 logger = get_logger('tentacle')
 
 app = current_app._get_current_object()
-event_store = get_event_store(app)
 
 
 @app.task
@@ -22,14 +20,14 @@ def put(task_payload):
                              for key in task_payload))
         return 'nok'
 
-    event_store.put(payload.name, payload.to_dict())
+    app.event_store.put(payload.name, payload.to_dict())
     return 'ok'
 
 
 @app.task
 def get(task_id):
     """Endpoint used to retrieve a registered event."""
-    result = event_store.get(task_id)
+    result = app.event_store.get(task_id)
     return result
 
 
@@ -53,14 +51,14 @@ def update(task_id, task_payload):
                              for key in task_payload))
         return 'nok'
 
-    event_store.put(task_id, response.to_dict())
+    app.event_store.put(task_id, response.to_dict())
     return 'ok'
 
 
 @app.task
 def delete(task_id):
     """Endpoint used to delete a registered event."""
-    event_store.delete(task_id)
+    app.event_store.delete(task_id)
     return 'ok'
 
 
@@ -68,13 +66,17 @@ def delete(task_id):
 def search(task_name=None, worker_type=None):
     """Endpoint used to retrieve a filtered list of registered events.
 
-    The query options are: task name, worker type, periodicity.
+    The query options are: task name, worker type.
     """
-    events = event_store.all()
+    if task_name is None and worker_type is None:
+        return 'nok'
+
+    events = app.event_store.all()
 
     results = []
     for item in events:
-        if item['name'] == task_name and item['worker'] == worker_type:
+
+        if item.name == task_name or item.worker_type == worker_type:
             results.append(item)
 
     return results
