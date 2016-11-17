@@ -8,7 +8,7 @@ from celery import current_app
 
 from store import get_event_store
 from dispatcher import event_dispatcher
-from config import Config, get_logger
+from . import Config, get_logger
 
 
 logger = get_logger('tentacle')

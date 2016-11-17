@@ -7,7 +7,7 @@ from celery import current_app
 
 from storebackend import get_backend
 from taskmodel import TaskModel
-from config import Config
+from . import Config
 
 
 class EventStore(object):

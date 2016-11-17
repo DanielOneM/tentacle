@@ -2,7 +2,7 @@
 from celery import current_app
 
 from taskmodel import TaskModel
-from config import get_logger
+from . import get_logger
 
 logger = get_logger('tentacle')
 

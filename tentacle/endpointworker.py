@@ -4,7 +4,7 @@ from celery import Celery
 from celery import bootsteps
 from kombu import Consumer, Queue
 
-from config import Config, get_logger
+from . import Config, get_logger
 from store import get_event_store
 
 logger = get_logger('tentacle')

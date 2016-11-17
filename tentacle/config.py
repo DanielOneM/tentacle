@@ -29,9 +29,9 @@ class BaseConf(object):
     DEFAULT_UPDATE_INTERVAL = 5
 
     # Kraken connection data
-    KRAKEN_USER = 'kraken'
-    KRAKEN_PASSWORD = 'kraken'
-    KRAKEN_HOST = ''
+    KRAKEN_USER = 'guest'
+    KRAKEN_PASSWORD = 'guest'
+    KRAKEN_HOST = 'localhost'
     KRAKEN_PORT = 5672
     KRAKEN_VHOST = 'kraken'
     KRAKEN_ROUTING_KEY = 'kraken'
@@ -44,9 +44,9 @@ class BaseConf(object):
     )
 
     # Nautilus connection data
-    NAUTILUS_USER = 'nautilus'
-    NAUTILUS_PASSWORD = 'nautilus'
-    NAUTILUS_HOST = ''
+    NAUTILUS_USER = 'guest'
+    NAUTILUS_PASSWORD = 'guest'
+    NAUTILUS_HOST = 'localhost'
     NAUTILUS_PORT = 5672
     NAUTILUS_VHOST = 'nautilus'
     NAUTILUS_ROUTING_KEY = 'nautilus'
@@ -109,7 +109,3 @@ class ProdConf(BaseConf):
     # The lifetime of a database connection, in seconds. Use 0 to close database connections at the end of each task
     # and None for unlimited persistent connections
     AEROSPIKE_CONN_MAX_AGE = None
-
-# change object when switching to production
-# TODO: find cleaner way
-Config = BaseConf

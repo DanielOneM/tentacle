@@ -1,6 +1,6 @@
 """Event dispatcher."""
 
-from config import Config, get_logger
+from . import Config, get_logger
 from siren.serializers import (json_loads, msgpack_loads, json_dumps,
                                msgpack_dumps)
 from kombu import Exchange, Connection

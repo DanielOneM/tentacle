@@ -2,26 +2,23 @@
 
 import aerospike
 
-from test_utils import (kraken_hit, nautilus_hit)
+from utils import (kraken_hit, nautilus_hit)
 
+task_payload = {
+    'id': 'smthing',
+    'task': 'kraken.tasks.RPCTask',
+    'kwargs': {
+        'id': 'smthing',
+        'jsonrpc': '2.0',
+        'method': 'self.method',
+        'params': 'params'
+    }
+}
 
-def check_aerospike():
-    """Check to see if aerospike is reachable."""
-    pass
-
-
-def check_rabbitmq():
-    """Check to see if rabbitmq is reachable."""
-    pass
-
-
-def check_engine():
-    """Check to see if the Event Engine is working."""
-
-
-def setup_rabbitmq():
-    """Setup rabbitmq exchanges/queues."""
-    pass
+endpoint_payload = {
+    'action': 'put',
+    'task': task_payload
+}
 
 
 def test_endpoints():

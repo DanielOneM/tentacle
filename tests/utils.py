@@ -7,7 +7,7 @@ from kombu import Queue, Exchange, Connection
 from kombu.exceptions import TimeoutError
 from kombu.serialization import register
 
-from tentacle.config import Config, get_logger
+from tentacle import Config, get_logger
 
 
 logger = get_logger('tentacle')

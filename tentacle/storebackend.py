@@ -11,7 +11,7 @@ from abc import ABCMeta, abstractmethod
 
 import aerospike
 
-from config import Config, get_logger
+from . import Config, get_logger
 
 
 logger = get_logger('tentacle')
