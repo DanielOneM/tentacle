@@ -231,3 +231,48 @@ def nautilus_hit(self, method, *args, **kwargs):
 
     logger.info('Hitting Nautilus: %s - %s %s' % (method, args, kwargs))
     nautilus.call()
+
+
+class TentaclePublisher(Publisher):
+    """A publisher customized to talk to Tentacle."""
+
+    exchange = '/'
+    routing_key = 'tentacle'
+    user = 'guest'
+    password = 'guest'
+    vhost = '/'
+    host = 'localhost'
+
+    needs_response = False
+
+    def __init__(self, method, *args, **kwargs):
+        """Initialize the publisher with the method endpoint."""
+        self.method = method
+        super(KrakenPublisher, self).__init__(*args, **kwargs)
+
+    def get_payload(self):
+        """Create the message payload as accepted by celery.
+
+        http://docs.celeryproject.org/en/latest/internals/protocol.html#example-message
+        """
+        params = self._args or self._kwargs
+
+        payload = {
+            'id': self.corr_id,
+            'task': 'kraken.tasks.RPCTask',
+            'kwargs': {
+                'id': self.corr_id,
+                'jsonrpc': '2.0',
+                'method': self.method,
+                'params': params
+            },
+        }
+        return payload
+
+
+def kraken_hit(self, method, *args, **kwargs):
+    """Hit Kraken on the specified method with the specified kwargs."""
+    kraken = KrakenPublisher(method, *args, **kwargs)
+
+    logger.info('Hitting Kraken: %s - %s %s' % (method, args, kwargs))
+    kraken.call()
