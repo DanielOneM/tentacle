@@ -3,6 +3,7 @@
 from celery import Celery
 from celery import bootsteps
 from kombu import Consumer, Queue
+from siren.serializers import (json_loads, msgpack_loads)
 
 from . import Config, get_logger
 from store import get_event_store
@@ -25,14 +26,20 @@ class EndpointConsumer(bootsteps.ConsumerStep):
 
     def on_message(self, message):
         """Overriding class method."""
-        if 'action' not in message.body:
+        if Config.CELERY_TASK_SERIALIZER.endswith('json'):
+            serializer = json_loads
+        else:
+            serializer = msgpack_loads
+        payload = serializer(message.body)
+        if 'action' not in payload:
             # message does not have an action, reject it
             logger.info('Received msg with no action. Rejecting it.')
             message.reject()
         else:
-            body = message.body
-            action = body.get('action')
-            task_payload = body.get('task')
+            action = payload.get('action')
+            task_payload = payload.get('task')
+            logger.info('Received msg with <%s> action and <%s> task name.',
+                        action, task_payload['id'])
 
             app.tasks['tentacle.endpointtasks.' + action].delay(task_payload)
             message.ack()

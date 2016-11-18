@@ -9,5 +9,5 @@
 #echo 'waiting for aerospike start-up.'
 #sleep 10
 echo 'starting event engine.'
-celery worker --beat --detach --app=tentacle.endpointworker.app --scheduler=tentacle.schedulers.EventScheduler -l info -f eventengine.log
+celery worker --beat --detach --app=tentacle.endpointworker.app --scheduler=tentacle.schedulers.EventScheduler -l debug -f eventengine.log
 echo 'event engine started.'

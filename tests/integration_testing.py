@@ -1,4 +1,10 @@
 """Test the EventEngine together with Aerospike and RabbitMQ."""
+import sys
+sys.path.append('/home/dread/CODE/tentacle')
+
+from siren.serializers import (json_dumps,
+                               msgpack_dumps)
+
 from tentacle import Config
 from utils import Publisher
 
@@ -12,7 +18,6 @@ task_payload = {
         'params': 'params'
     }
 }
-
 
 
 class TentaclePublisher(Publisher):
@@ -37,21 +42,20 @@ class TentaclePublisher(Publisher):
 
         http://docs.celeryproject.org/en/latest/internals/protocol.html#example-message
         """
-        params = self._args or self._kwargs
-
         payload = {
             'id': self.corr_id,
             'task': task_payload,
             'action': self.action
-            }
         }
-        return payload
+        return json_dumps(payload) if self.content_type.endswith('json') else msgpack_dumps(payload)
 
 
 def test_endpoints():
     """Check the event repository endpoints."""
     pass
-    tnt = TentaclePublisher('put', payload=task_payload)
+    tnt = TentaclePublisher('put')
+    response = tnt.call()
+    print response
     # put a task in the repository
 
     # get the task put in the repository
@@ -77,3 +81,7 @@ def test_scheduler():
     # put a kraken task in the repository
 
     # check in the kraken vhost if the task has been delivered
+
+if __name__ == '__main__':
+
+    test_endpoints()

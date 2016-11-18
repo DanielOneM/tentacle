@@ -31,13 +31,6 @@ class Publisher(object):
 
     def __init__(self, *args, **kwargs):
         """Initialize the publisher."""
-        register('json', json_dumps, json_loads,
-                 content_type='application/json',
-                 content_encoding='utf-8')
-
-        register('msgpack', msgpack_dumps, msgpack_loads,
-                 content_type='application/msgpack',
-                 content_encoding='utf-8')
 
         if self.user is None and self.password is None:
             raise Exception('Please provide a username and password.')
@@ -90,8 +83,7 @@ class Publisher(object):
                                  exchange=exchange,
                                  auto_delete=True)
 
-            producer = conn.Producer(exchange=exchange,
-                                     serializer=self.content_type)
+            producer = conn.Producer(exchange=exchange)
             msg = dict(
                 body=self.payload,
                 routing_key=self.get_routing_key(),
@@ -129,7 +121,6 @@ class Publisher(object):
     def get_properties(self):
         """Used by subclasses to customize publishing kwargs."""
         data = {
-            'content_type': self.content_type,
             'delivery_mode': 2,  # make message persistent
         }
         if self.needs_response:
@@ -178,7 +169,7 @@ class KrakenPublisher(Publisher):
                 'params': params
             },
         }
-        return payload
+        return json_dumps(payload) if self.content_type.endswith('json') else msgpack_dumps(payload)
 
 
 def kraken_hit(self, method, *args, **kwargs):
@@ -222,7 +213,7 @@ class NautilusPublisher(Publisher):
                 'params': params
             },
         }
-        return payload
+        return json_dumps(payload) if self.content_type.endswith('json') else msgpack_dumps(payload)
 
 
 def nautilus_hit(self, method, *args, **kwargs):
@@ -231,48 +222,3 @@ def nautilus_hit(self, method, *args, **kwargs):
 
     logger.info('Hitting Nautilus: %s - %s %s' % (method, args, kwargs))
     nautilus.call()
-
-
-class TentaclePublisher(Publisher):
-    """A publisher customized to talk to Tentacle."""
-
-    exchange = '/'
-    routing_key = 'tentacle'
-    user = 'guest'
-    password = 'guest'
-    vhost = '/'
-    host = 'localhost'
-
-    needs_response = False
-
-    def __init__(self, method, *args, **kwargs):
-        """Initialize the publisher with the method endpoint."""
-        self.method = method
-        super(KrakenPublisher, self).__init__(*args, **kwargs)
-
-    def get_payload(self):
-        """Create the message payload as accepted by celery.
-
-        http://docs.celeryproject.org/en/latest/internals/protocol.html#example-message
-        """
-        params = self._args or self._kwargs
-
-        payload = {
-            'id': self.corr_id,
-            'task': 'kraken.tasks.RPCTask',
-            'kwargs': {
-                'id': self.corr_id,
-                'jsonrpc': '2.0',
-                'method': self.method,
-                'params': params
-            },
-        }
-        return payload
-
-
-def kraken_hit(self, method, *args, **kwargs):
-    """Hit Kraken on the specified method with the specified kwargs."""
-    kraken = KrakenPublisher(method, *args, **kwargs)
-
-    logger.info('Hitting Kraken: %s - %s %s' % (method, args, kwargs))
-    kraken.call()
