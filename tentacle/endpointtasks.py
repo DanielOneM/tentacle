@@ -6,7 +6,8 @@ from . import get_logger
 
 logger = get_logger('tentacle')
 
-app = current_app._get_current_object()
+app = current_app
+logger.debug('App: %s', app)
 
 
 @app.task

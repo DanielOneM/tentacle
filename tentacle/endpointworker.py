@@ -2,11 +2,13 @@
 
 from celery import Celery
 from celery import bootsteps
+from celery.registry import tasks
 from kombu import Consumer, Queue
 from siren.serializers import (json_loads, msgpack_loads)
 
 from . import Config, get_logger
 from store import get_event_store
+from endpointtasks import put, get, update, delete, search
 
 logger = get_logger('tentacle')
 

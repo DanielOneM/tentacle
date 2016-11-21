@@ -14,8 +14,6 @@ class BaseConf(object):
     CELERY_TASK_SERIALIZER = 'msgpack'
     CELERY_RESULT_BACKEND = 'rpc'
     CELERY_RESULT_PERSISTENT = True
-    # CELERY_IMPORTS = ('tentacle.tentacle.endpointtasks.' + item for item in
-    #                   ['put', 'get', 'update', 'delete', 'search'])
 
     # Logging formats
     CELERYD_LOG_FORMAT = "[%(asctime)s: %(levelname)s/%(processName)s] %(pathname)s:%(lineno)d - %(message)s"  # noqa
