@@ -16,7 +16,7 @@ def put(task_payload):
     try:
         payload = TaskModel(**task_payload)
     except ValueError:
-        logger.info('Bad task received: %s',
+        logger.error('Bad task received: %s',
                     ','.join('{}:{}'.format(key, task_payload[key])
                              for key in task_payload))
         return 'nok'
@@ -38,7 +38,7 @@ def update(task_id, task_payload):
     response = get(task_id)
 
     if response is None:
-        logger.info('Cannot find task with id %s to update.', task_id)
+        logger.error('Cannot find task with id %s to update.', task_id)
         return 'nok'
 
     for item in task_payload:
@@ -47,7 +47,7 @@ def update(task_id, task_payload):
     try:
         response.validate()
     except ValueError:
-        logger.info('Cannot update. Bad task received: %s',
+        logger.error('Cannot update. Bad task received: %s',
                     ','.join('{}:{}'.format(key, task_payload[key])
                              for key in task_payload))
         return 'nok'
