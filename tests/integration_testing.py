@@ -1,6 +1,8 @@
 """Test the EventEngine together with Aerospike and RabbitMQ."""
 import sys
-sys.path.append('/home/dread/CODE/tentacle')
+import os
+tentacle_path = '/'.join(os.path.realpath(__file__).split('/')[:-2])
+sys.path.append(tentacle_path)
 
 from siren.serializers import (json_dumps,
                                msgpack_dumps)

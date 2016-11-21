@@ -40,12 +40,11 @@ class EndpointConsumer(bootsteps.ConsumerStep):
             task_payload = payload.get('task')
             logger.info('Received msg with <%s> action and <%s> task name.',
                         action, task_payload['id'])
+            logger.debug('Active tasks: %s', ','.join(item for item in app.tasks))
 
             app.tasks['tentacle.endpointtasks.' + action].delay(task_payload)
             message.ack()
 
-active_tasks = ['tentacle.endpointtasks.' + item for item in
-                ['put', 'get', 'update', 'delete', 'search']]
 
 app = Celery('tentacle')
 app.steps['consumer'].add(EndpointConsumer)
