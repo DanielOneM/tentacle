@@ -49,13 +49,15 @@ class TentaclePublisher(Publisher):
             'task': task_payload,
             'action': self.action
         }
-        return json_dumps(payload) if self.content_type.endswith('json') else msgpack_dumps(payload)
+        return json_dumps(payload) if self.content_type.endswith('json') \
+            else msgpack_dumps(payload)
 
 
 def test_endpoints():
     """Check the event repository endpoints."""
     pass
     tnt = TentaclePublisher('put')
+    print "corr_id: %s" % tnt.corr_id
     response = tnt.call()
     print response
     # put a task in the repository

@@ -12,7 +12,8 @@ class BaseConf(object):
     CELERY_ENABLE_UTC = True  # if set to false system local timezone is used
     CELERY_ACCEPT_CONTENT = ['json', 'msgpack']
     CELERY_TASK_SERIALIZER = 'msgpack'
-    CELERY_RESULT_BACKEND = 'amqp://guest@localhost/tentacle'
+    CELERY_RESULT_BACKEND = 'rpc://'
+    CELERY_RESULT_EXCHANGE = 'tentacle'
     CELERY_RESULT_PERSISTENT = True
 
     # Logging formats

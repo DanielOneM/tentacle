@@ -79,7 +79,7 @@ class Publisher(object):
             self.response = None
 
             exchange = Exchange(name=self.exchange)
-            result_queue = Queue(name=self.corr_id,
+            result_queue = Queue(name=self.corr_id.replace('-', ''),
                                  exchange=exchange,
                                  auto_delete=True)
 
