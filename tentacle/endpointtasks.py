@@ -32,7 +32,10 @@ def get(msg):
         return 'nok'
 
     result = app.event_store.get(msg['name'])
-    return result.to_dict()
+    if result is not None:
+        return result.to_dict()
+    else:
+        return None
 
 
 @app.task

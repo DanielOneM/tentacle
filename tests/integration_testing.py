@@ -25,9 +25,13 @@ get_payload = {
     'name': 'smthing'
 }
 
-update_payload = {}
+delete_payload = {
+    'name': 'smthing'
+}
 
-delete_payload = {}
+search_payload = {
+    'task_name': 'another'
+}
 
 
 class TentaclePublisher(Publisher):
@@ -65,24 +69,56 @@ class TentaclePublisher(Publisher):
 def test_endpoints():
     """Check the event repository endpoints."""
     # put a task in the repository
+    print "PUT TEST" + "\n" + ">" * 20
     tnt = TentaclePublisher('put', msg=put_payload)
-    print "corr_id: %s" % tnt.corr_id
     response = tnt.call()
     print response
+    print ">" * 20 + "\n"
 
     # get the task put in the repository
+    print "GET TEST" + "\n" + ">" * 20
     tnt = TentaclePublisher('get', msg=get_payload)
-    print "corr_id: %s" % tnt.corr_id
     response = tnt.call()
     print response
+    print ">" * 20 + "\n"
 
     # update the task that was put
+    print "UPDATE TEST" + "\n" + ">" * 20
+    updated_put = dict(put_payload)
+    updated_put['kwargs']['id'] = 'another'
+    tnt = TentaclePublisher('update', msg=updated_put)
+    response = tnt.call()
+    print response
+    print ">" * 20 + "\n"
 
     # delete the task
+    print "DELETE TEST" + "\n" + ">" * 20
+    tnt = TentaclePublisher('delete', msg=get_payload)
+    response = tnt.call()
+    print response
+    tnt = TentaclePublisher('get', msg=get_payload)
+    response = tnt.call()
+    print response
+    print ">" * 20 + "\n"
 
     # put two tasks
+    print "PUT TEST - TWO" + "\n" + ">" * 20
+    tnt = TentaclePublisher('put', msg=put_payload)
+    response = tnt.call()
+    print response
+    put_payload2 = dict(put_payload)
+    put_payload2['name'] = 'another'
+    tnt = TentaclePublisher('put', msg=put_payload2)
+    response = tnt.call()
+    print response
+    print ">" * 20 + "\n"
 
     # search for a task
+    print "SEARCH TEST" + "\n" + ">" * 20
+    tnt = TentaclePublisher('search', msg=search_payload)
+    response = tnt.call()
+    print response
+    print ">" * 20 + "\n"
 
 
 def test_scheduler():

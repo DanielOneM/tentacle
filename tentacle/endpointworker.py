@@ -49,8 +49,8 @@ class EndpointConsumer(bootsteps.ConsumerStep):
         else:
             action = payload.get('action')
             task_payload = payload.get('task')
-            logger.info('Received msg: <%s> action, <%s> name and <%s> id.',
-                        action, task_payload['name'], payload.get('id'))
+            logger.info('Received msg: <%s> action and <%s> id.',
+                        action, payload.get('id'))
             logger.debug('Active tasks: %s',
                          ','.join(item for item in app.tasks))
 
