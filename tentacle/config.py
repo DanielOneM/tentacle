@@ -15,6 +15,7 @@ class BaseConf(object):
     CELERY_RESULT_BACKEND = 'rpc://'
     CELERY_RESULT_EXCHANGE = 'tentacle'
     CELERY_RESULT_PERSISTENT = True
+    CELERY_RESULT_SERIALIZER = 'json'
 
     # Logging formats
     CELERYD_LOG_FORMAT = "[%(asctime)s: %(levelname)s/%(processName)s] %(pathname)s:%(lineno)d - %(message)s"  # noqa
@@ -64,6 +65,7 @@ class ProdConf(BaseConf):
     """Production version of the base Config."""
 
     DEFAULT_BACKEND = 'aerospike'
+    SESSION_TTL = 12 * 24 * 3600
 
     AEROSPIKE_CONFIG = {
         # tuples identifying multiple nodes in the cluster

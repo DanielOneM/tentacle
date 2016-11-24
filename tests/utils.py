@@ -3,12 +3,19 @@ import uuid
 
 from siren.serializers import (json_loads, msgpack_loads, json_dumps,
                                msgpack_dumps)
+from kombu.serialization import register
 from kombu import Queue, Exchange, Connection
 from kombu.exceptions import TimeoutError
-from kombu.serialization import register
 
 from tentacle import Config, get_logger
 
+register('json', json_dumps, json_loads,
+         content_type='application/json',
+         content_encoding='utf-8')
+
+register('msgpack', msgpack_dumps, msgpack_loads,
+         content_type='application/msgpack',
+         content_encoding='utf-8')
 
 logger = get_logger('tentacle')
 
@@ -16,7 +23,7 @@ logger = get_logger('tentacle')
 class Publisher(object):
     """Base publisher class."""
 
-    content_type = 'application/{}'.format(Config.CELERY_TASK_SERIALIZER)
+    content_type = Config.CELERY_TASK_SERIALIZER
     needs_response = True
 
     host = 'localhost'
@@ -31,7 +38,6 @@ class Publisher(object):
 
     def __init__(self, *args, **kwargs):
         """Initialize the publisher."""
-
         if self.user is None and self.password is None:
             raise Exception('Please provide a username and password.')
 
@@ -79,11 +85,12 @@ class Publisher(object):
             self.response = None
 
             exchange = Exchange(name=self.exchange)
-            result_queue = Queue(name=self.corr_id.replace('-', ''),
+            result_queue = Queue(name=self.corr_id,
                                  exchange=exchange,
                                  auto_delete=True)
 
-            producer = conn.Producer(exchange=exchange)
+            producer = conn.Producer(exchange=exchange,
+                                     serializer=self.content_type)
             msg = dict(
                 body=self.payload,
                 routing_key=self.get_routing_key(),
@@ -169,7 +176,8 @@ class KrakenPublisher(Publisher):
                 'params': params
             },
         }
-        return json_dumps(payload) if self.content_type.endswith('json') else msgpack_dumps(payload)
+        return json_dumps(payload) if self.content_type.endswith('json') \
+            else msgpack_dumps(payload)
 
 
 def kraken_hit(self, method, *args, **kwargs):
@@ -213,7 +221,8 @@ class NautilusPublisher(Publisher):
                 'params': params
             },
         }
-        return json_dumps(payload) if self.content_type.endswith('json') else msgpack_dumps(payload)
+        return json_dumps(payload) if self.content_type.endswith('json') \
+            else msgpack_dumps(payload)
 
 
 def nautilus_hit(self, method, *args, **kwargs):

@@ -4,15 +4,15 @@ import os
 tentacle_path = '/'.join(os.path.realpath(__file__).split('/')[:-2])
 sys.path.append(tentacle_path)
 
-from siren.serializers import (json_dumps,
-                               msgpack_dumps)
-
-from tentacle import Config
 from utils import Publisher
 
-task_payload = {
-    'id': 'smthing',
+put_payload = {
+    'name': 'smthing',
     'task': 'kraken.tasks.RPCTask',
+    'interval': {
+        'every': 7,
+        'period': 'seconds'
+    },
     'kwargs': {
         'id': 'smthing',
         'jsonrpc': '2.0',
@@ -20,6 +20,14 @@ task_payload = {
         'params': 'params'
     }
 }
+
+get_payload = {
+    'name': 'smthing'
+}
+
+update_payload = {}
+
+delete_payload = {}
 
 
 class TentaclePublisher(Publisher):
@@ -37,6 +45,8 @@ class TentaclePublisher(Publisher):
     def __init__(self, action, *args, **kwargs):
         """Initialize the publisher with the specific endpoint."""
         self.action = action
+        if 'msg' in kwargs:
+            self.msg = kwargs.pop('msg')
         super(TentaclePublisher, self).__init__(*args, **kwargs)
 
     def get_payload(self):
@@ -46,23 +56,25 @@ class TentaclePublisher(Publisher):
         """
         payload = {
             'id': self.corr_id,
-            'task': task_payload,
+            'task': self.msg,
             'action': self.action
         }
-        return json_dumps(payload) if self.content_type.endswith('json') \
-            else msgpack_dumps(payload)
+        return payload
 
 
 def test_endpoints():
     """Check the event repository endpoints."""
-    pass
-    tnt = TentaclePublisher('put')
+    # put a task in the repository
+    tnt = TentaclePublisher('put', msg=put_payload)
     print "corr_id: %s" % tnt.corr_id
     response = tnt.call()
     print response
-    # put a task in the repository
 
     # get the task put in the repository
+    tnt = TentaclePublisher('get', msg=get_payload)
+    print "corr_id: %s" % tnt.corr_id
+    response = tnt.call()
+    print response
 
     # update the task that was put
 
