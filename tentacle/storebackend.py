@@ -151,10 +151,11 @@ class AerospikeBackend(BaseBackend):
 
     def all(self):
         """Return all tasks in the repository."""
-        query = self.client.query(Config.AEROSPIKE_NAMESPACE,
-                                  Config.AEROSPIKE_SETNAME)
+        query = self.client.scan(Config.AEROSPIKE_NAMESPACE,
+                                 Config.AEROSPIKE_SETNAME)
+        query.select()
         try:
-            results = query.results()
+            results = [bin for key, meta, bin in query.results()]
             return results
         except aerospike.exception.RecordNotFound:
             logger.info('No records found in db.')

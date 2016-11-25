@@ -1,9 +1,6 @@
 """Config file for Tentacle."""
-
 import aerospike
 from celery.utils.log import get_logger
-
-logger = get_logger('tentacle')
 
 
 class BaseConf(object):

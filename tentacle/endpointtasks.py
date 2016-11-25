@@ -7,7 +7,6 @@ from . import get_logger
 logger = get_logger('tentacle')
 
 app = current_app
-logger.debug('App: %s', app)
 
 
 @app.task
@@ -41,17 +40,14 @@ def get(msg):
 @app.task
 def update(msg):
     """Endpoint used to update a registered event."""
-    response = get(msg['name'])
+    response = app.event_store.get(msg['name'])
 
     if response is None:
         logger.error('Cannot find task with id %s to update.', msg['name'])
         return u'nok'
 
-    for item in msg:
-        setattr(response, item, msg[item])
-
     try:
-        response.validate()
+        response = TaskModel(**msg)
     except ValueError:
         logger.error('Cannot update. Bad task received: %s',
                      ','.join('{}:{}'.format(key, msg[key])
@@ -87,8 +83,13 @@ def search(msg):
 
     results = []
     for item in events:
+        appendable = False
+        if task_name is not None and item.name == task_name:
+            appendable = True
+        if worker_type is not None and item.worker_type == worker_type:
+            appendable = True
 
-        if item.name == task_name or item.worker_type == worker_type:
+        if appendable:
             results.append(item.to_dict())
 
     return results

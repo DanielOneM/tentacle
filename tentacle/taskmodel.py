@@ -66,19 +66,6 @@ class Interval(object):
             datetime.timedelta(**{self.period: self.every})
         )
 
-    @property
-    def period_singular(self):
-        """Show the period as a singular."""
-        return self.period[:-1]
-
-    def __unicode__(self):
-        """Define a representation for the object."""
-        if self.every == 1:
-            return 'every {0.period_singular}'.format(self)
-        elif self.every == 0 and self.period is None:
-            return None
-        return 'every {0.every} {0.period}'.format(self)
-
     def to_dict(self):
         """Serialize this object to a dict."""
         return {'every': self._every, 'period': self._period}
@@ -112,13 +99,6 @@ class Crontab(object):
                                         day_of_week=self.day_of_week,
                                         day_of_month=self.day_of_month,
                                         month_of_year=self.month_of_year)
-
-    def __unicode__(self):
-        """Define a representation for the object."""
-        return '{0} {1} {2} {3} {4} (m/h/d/dM/MY)'.format(
-            self.minute, self.hour, self.day_of_week,
-            self.day_of_month, self.month_of_year
-        )
 
     def to_dict(self):
         """Serialize this object to a dict."""
@@ -228,6 +208,8 @@ class TaskModel(object):
             if attr in ['interval', 'crontab']:
                 item = getattr(self, attr)
                 if item is not None:
+                    if isinstance(item, dict):
+                        logger.debug("anomaly: %s, %s", attr, item)
                     data.update({attr: item.to_dict()})
                 else:
                     data.update({attr: None})

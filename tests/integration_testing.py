@@ -72,14 +72,14 @@ def test_endpoints():
     print "PUT TEST" + "\n" + ">" * 20
     tnt = TentaclePublisher('put', msg=put_payload)
     response = tnt.call()
-    print response
+    print response['result']
     print ">" * 20 + "\n"
 
     # get the task put in the repository
     print "GET TEST" + "\n" + ">" * 20
     tnt = TentaclePublisher('get', msg=get_payload)
     response = tnt.call()
-    print response
+    print response['result']
     print ">" * 20 + "\n"
 
     # update the task that was put
@@ -88,36 +88,36 @@ def test_endpoints():
     updated_put['kwargs']['id'] = 'another'
     tnt = TentaclePublisher('update', msg=updated_put)
     response = tnt.call()
-    print response
+    print response['result']
     print ">" * 20 + "\n"
 
     # delete the task
     print "DELETE TEST" + "\n" + ">" * 20
     tnt = TentaclePublisher('delete', msg=get_payload)
     response = tnt.call()
-    print response
+    print response['result']
     tnt = TentaclePublisher('get', msg=get_payload)
     response = tnt.call()
-    print response
+    print 'ok' if response['result'] is None else 'nok'
     print ">" * 20 + "\n"
 
     # put two tasks
     print "PUT TEST - TWO" + "\n" + ">" * 20
     tnt = TentaclePublisher('put', msg=put_payload)
     response = tnt.call()
-    print response
+    print response['result']
     put_payload2 = dict(put_payload)
     put_payload2['name'] = 'another'
     tnt = TentaclePublisher('put', msg=put_payload2)
     response = tnt.call()
-    print response
+    print response['result']
     print ">" * 20 + "\n"
 
     # search for a task
     print "SEARCH TEST" + "\n" + ">" * 20
     tnt = TentaclePublisher('search', msg=search_payload)
     response = tnt.call()
-    print response
+    print response['result']
     print ">" * 20 + "\n"
 
 

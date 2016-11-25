@@ -36,8 +36,9 @@ class TestEventDispatcher(unittest.TestCase):
         bad_payload = payload
         bad_payload['task'] = 'smthing'
         self.assertRaisesRegexp(TypeError,
-                                'Kraken task does not have the correct attributes.',
-                                self.evdisp.format_payload, worker_type, bad_payload)
+                                'Kraken task has invalid attributes.',
+                                self.evdisp.format_payload,
+                                worker_type, bad_payload)
 
     def test_nautilus_format_payload(self):
         """Check that task formatting follows Nautilus appropriate rules."""
@@ -57,8 +58,9 @@ class TestEventDispatcher(unittest.TestCase):
         bad_payload = payload
         bad_payload['kwargs']['method'] = 'smthing'
         self.assertRaisesRegexp(TypeError,
-                                'Nautilus task does not have the correct attributes.',
-                                self.evdisp.format_payload, worker_type, bad_payload)
+                                'Nautilus task has invalid attributes.',
+                                self.evdisp.format_payload,
+                                worker_type, bad_payload)
 
     def test_dispatch(self):
         """Check the event dispatching process."""
