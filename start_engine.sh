@@ -12,7 +12,7 @@ else
 fi
 
 CLRY="$(ps auxww | grep 'celery' | awk '{print $2}')"
-if [ -z "$CLRY" ]; then
+if [ ! -z "$CLRY" ]; then
 	#start the engine
     echo 'starting event engine.'
     celery worker --beat --detach --app=tentacle.endpointworker.app --scheduler=tentacle.schedulers.EventScheduler -l debug -f eventengine.log
