@@ -1,9 +1,6 @@
 """Config file for Tentacle."""
-
 import aerospike
 from celery.utils.log import get_logger
-
-logger = get_logger('tentacle')
 
 
 class BaseConf(object):
@@ -12,8 +9,10 @@ class BaseConf(object):
     CELERY_ENABLE_UTC = True  # if set to false system local timezone is used
     CELERY_ACCEPT_CONTENT = ['json', 'msgpack']
     CELERY_TASK_SERIALIZER = 'msgpack'
-    CELERY_RESULT_BACKEND = 'amqp://guest@localhost/tentacle'
+    CELERY_RESULT_BACKEND = 'rpc://'
+    CELERY_RESULT_EXCHANGE = 'tentacle'
     CELERY_RESULT_PERSISTENT = True
+    CELERY_RESULT_SERIALIZER = 'json'
 
     # Logging formats
     CELERYD_LOG_FORMAT = "[%(asctime)s: %(levelname)s/%(processName)s] %(pathname)s:%(lineno)d - %(message)s"  # noqa
@@ -63,6 +62,7 @@ class ProdConf(BaseConf):
     """Production version of the base Config."""
 
     DEFAULT_BACKEND = 'aerospike'
+    SESSION_TTL = 12 * 24 * 3600
 
     AEROSPIKE_CONFIG = {
         # tuples identifying multiple nodes in the cluster

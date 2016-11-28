@@ -38,6 +38,9 @@ class EventStore(object):
 
     def _return_object_wrapper(self, mthd):
         """Wrap the output of the relevant methods in the TaskModel object."""
+        # FIXME: fragile approach, would be better to do it via a standardized
+        # function API
+
         # if the wrapped method does not return anything, just use that
         src = inspect.getsource(mthd)
         if ' return ' not in src:

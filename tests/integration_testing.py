@@ -4,21 +4,33 @@ import os
 tentacle_path = '/'.join(os.path.realpath(__file__).split('/')[:-2])
 sys.path.append(tentacle_path)
 
-from siren.serializers import (json_dumps,
-                               msgpack_dumps)
-
-from tentacle import Config
 from utils import Publisher
 
-task_payload = {
-    'id': 'smthing',
+put_payload = {
+    'name': 'smthing',
     'task': 'kraken.tasks.RPCTask',
+    'interval': {
+        'every': 7,
+        'period': 'seconds'
+    },
     'kwargs': {
         'id': 'smthing',
         'jsonrpc': '2.0',
         'method': 'self.method',
         'params': 'params'
     }
+}
+
+get_payload = {
+    'name': 'smthing'
+}
+
+delete_payload = {
+    'name': 'smthing'
+}
+
+search_payload = {
+    'task_name': 'another'
 }
 
 
@@ -37,6 +49,8 @@ class TentaclePublisher(Publisher):
     def __init__(self, action, *args, **kwargs):
         """Initialize the publisher with the specific endpoint."""
         self.action = action
+        if 'msg' in kwargs:
+            self.msg = kwargs.pop('msg')
         super(TentaclePublisher, self).__init__(*args, **kwargs)
 
     def get_payload(self):
@@ -46,29 +60,65 @@ class TentaclePublisher(Publisher):
         """
         payload = {
             'id': self.corr_id,
-            'task': task_payload,
+            'task': self.msg,
             'action': self.action
         }
-        return json_dumps(payload) if self.content_type.endswith('json') else msgpack_dumps(payload)
+        return payload
 
 
 def test_endpoints():
     """Check the event repository endpoints."""
-    pass
-    tnt = TentaclePublisher('put')
-    response = tnt.call()
-    print response
     # put a task in the repository
+    print "PUT TEST" + "\n" + ">" * 20
+    tnt = TentaclePublisher('put', msg=put_payload)
+    response = tnt.call()
+    print response['result']
+    print ">" * 20 + "\n"
 
     # get the task put in the repository
+    print "GET TEST" + "\n" + ">" * 20
+    tnt = TentaclePublisher('get', msg=get_payload)
+    response = tnt.call()
+    print response['result']
+    print ">" * 20 + "\n"
 
     # update the task that was put
+    print "UPDATE TEST" + "\n" + ">" * 20
+    updated_put = dict(put_payload)
+    updated_put['kwargs']['id'] = 'another'
+    tnt = TentaclePublisher('update', msg=updated_put)
+    response = tnt.call()
+    print response['result']
+    print ">" * 20 + "\n"
 
     # delete the task
+    print "DELETE TEST" + "\n" + ">" * 20
+    tnt = TentaclePublisher('delete', msg=get_payload)
+    response = tnt.call()
+    print response['result']
+    tnt = TentaclePublisher('get', msg=get_payload)
+    response = tnt.call()
+    print 'ok' if response['result'] is None else 'nok'
+    print ">" * 20 + "\n"
 
     # put two tasks
+    print "PUT TEST - TWO" + "\n" + ">" * 20
+    tnt = TentaclePublisher('put', msg=put_payload)
+    response = tnt.call()
+    print response['result']
+    put_payload2 = dict(put_payload)
+    put_payload2['name'] = 'another'
+    tnt = TentaclePublisher('put', msg=put_payload2)
+    response = tnt.call()
+    print response['result']
+    print ">" * 20 + "\n"
 
     # search for a task
+    print "SEARCH TEST" + "\n" + ">" * 20
+    tnt = TentaclePublisher('search', msg=search_payload)
+    response = tnt.call()
+    print response['result']
+    print ">" * 20 + "\n"
 
 
 def test_scheduler():
