@@ -39,13 +39,17 @@ class EventDispatcher(object):
             raise ValueError('Task cannot be None.')
 
         worker_type = task.pop('worker_type')
+        if worker_type is None:
+            raise ValueError('Need to set an appropriate worker type.')
+
         worker_connection = getattr(self, '{}_conn'.format(worker_type), None)
         if worker_connection is None:
             raise ValueError('No connection for invalid worker type.')
+
         exchange = Exchange(task.pop('exchange', worker_type))
         routing_key = task.pop('routing_key', worker_type.upper())
 
-        logger.info('Sending task %s%s to %s',
+        logger.debug('Dispatcher: Sending task %s:%s to %s',
                     task.get('task'),
                     task.get('kwargs', {}).get('method', ''),
                     worker_type)

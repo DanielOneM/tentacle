@@ -13,6 +13,8 @@ put_payload = {
         'every': 7,
         'period': 'seconds'
     },
+    'enabled': True,
+    'worker_type': 'kraken',
     'kwargs': {
         'id': 'smthing',
         'jsonrpc': '2.0',

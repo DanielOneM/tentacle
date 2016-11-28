@@ -127,7 +127,7 @@ class TaskModel(object):
 
     Use this model to save a received event to the event store.
 
-    Attributes:
+    Attributes required:
         name            - unique name for the task, automatically generated
         worker_type     - type of worker that will handle the task
         task            - function or method name with full dotted path
@@ -135,10 +135,12 @@ class TaskModel(object):
         crontab         - periodicity set as crontab
         args            - any arguments for the task
         kwargs          - any keyword arguments for the task
-        exhange         - destination exchange for this task
+        enabled         - if the task can be executed
+
+    Optional attributes:
+        exchange        - destination exchange for this task
         routing_key     - destination routing_key for this task
         expires         - expiration date for task execution
-        enabled         - if the task can be executed
         last_run_at     - timestamp when the task was executed last time
         total_run_count - how many times has the task been run
         date_changed    - timestamp when the task was changed

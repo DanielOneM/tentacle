@@ -25,7 +25,10 @@ class BaseConf(object):
 
     # default backend settings for event store
     DEFAULT_BACKEND = 'dummybackend'
-    DEFAULT_UPDATE_INTERVAL = 5
+
+    # settings for the scheduler refresh interval
+    CELERYBEAT_MAX_LOOP_INTERVAL = 15
+    DEFAULT_UPDATE_INTERVAL = 15
 
     # Kraken connection data
     KRAKEN_USER = 'guest'
@@ -102,6 +105,7 @@ class ProdConf(BaseConf):
         'compression_threshold': 0
     }
 
+    # general aerospike settings
     AEROSPIKE_NAMESPACE = 'test'
     AEROSPIKE_SETNAME = 'tasks'
     AEROSPIKE_USERNAME = None

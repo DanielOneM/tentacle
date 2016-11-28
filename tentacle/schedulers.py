@@ -31,13 +31,13 @@ class EventEntry(ScheduleEntry):
 
         self.args = self._task.args
         self.kwargs = self._task.kwargs
-        self.options = {
-            'queue': self._task.queue,
-            'exchange': self._task.exchange,
-            'routing_key': self._task.routing_key,
-            'expires': self._task.expires,
-            'soft_time_limit': self._task.soft_time_limit
-        }
+        # self.options = {
+        #     'queue': self._task.queue,
+        #     'exchange': self._task.exchange,
+        #     'routing_key': self._task.routing_key,
+        #     'expires': self._task.expires,
+        #     'soft_time_limit': self._task.soft_time_limit
+        # }
 
         if self._task.total_run_count is None:
             self._task.total_run_count = 0
@@ -90,7 +90,7 @@ class EventEntry(ScheduleEntry):
                 self.last_run_at > self._task.last_run_at):
             self._task.last_run_at = self.last_run_at
         self._task.run_immediately = False
-        event_store.put(self._task.to_dict())
+        event_store.put(self.name, self._task.to_dict())
 
 
 class EventScheduler(Scheduler):
@@ -105,8 +105,7 @@ class EventScheduler(Scheduler):
         self._last_updated = None
         Scheduler.__init__(self, *args, **kwargs)
         self.max_interval = (kwargs.get('max_interval') or
-                             self.app.conf.CELERYBEAT_MAX_LOOP_INTERVAL or
-                             5)
+                             self.app.conf.CELERYBEAT_MAX_LOOP_INTERVAL)
 
     def requires_update(self):
         """Check if we should pull an updated schedule from the event store."""
@@ -123,6 +122,7 @@ class EventScheduler(Scheduler):
         d = {}
         for doc in event_store.all():
             d[doc.name] = EventEntry(doc)
+        logger.debug('There are %s tasks on the schedule', len(d))
         return d
 
     @property
@@ -138,13 +138,19 @@ class EventScheduler(Scheduler):
         for entry in self._schedule.values():
             entry.save()
 
-    def apply_entry(self, entry, producer=None):
+    def maybe_due(self, entry, publisher=None):
         """Dispatch a task for execution."""
-        logger.info('Scheduler: Sending task %s (%s)', entry.name, entry.task)
-        try:
-            self.dispatcher.dispatch(entry.to_dict())
-        except Exception as exc:  # pylint: disable=broad-except
-            logger.error('Message Error: %s\n%s',
-                         exc, traceback.format_stack(), exc_info=True)
-        else:
-            logger.debug('%s sent', entry.task)
+        is_due, next_time_to_run = entry.is_due()
+
+        if is_due:
+            logger.info('Scheduler: Sending task %s (%s)', entry.name, entry.task)
+
+            try:
+                self.dispatcher.dispatch(entry._task.to_dict())
+            except Exception as exc:  # pylint: disable=broad-except
+                logger.error('Message Error: %s\n%s',
+                             exc, traceback.format_stack(), exc_info=True)
+            else:
+                logger.debug('%s sent', entry.task)
+
+        return next_time_to_run
