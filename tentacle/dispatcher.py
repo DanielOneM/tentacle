@@ -46,21 +46,26 @@ class EventDispatcher(object):
         if worker_connection is None:
             raise ValueError('No connection for invalid worker type.')
 
-        exchange = Exchange(task.pop('exchange', worker_type))
-        routing_key = task.pop('routing_key', worker_type.upper())
+        exchange_name = task.pop('exchange')
+        if not exchange_name:
+            exchange_name = worker_type
+        exchange = Exchange(exchange_name)
+        routing_key = task.pop('routing_key')
+        if not routing_key:
+            routing_key = getattr(Config, '{}_ROUTING_KEY'.format(worker_type.upper()))
 
-        logger.debug('Dispatcher: Sending task %s:%s to %s',
+        logger.debug('Dispatcher: connection: %s, exchange: %s, routing_key: %s',
+                     worker_connection.__class__, exchange, routing_key)
+
+        with producers[worker_connection].acquire(block=True) as producer:
+            logger.debug('Dispatcher: Sending task %s:%s to %s',
                     task.get('task'),
                     task.get('kwargs', {}).get('method', ''),
                     worker_type)
-
-        with producers[worker_connection].acquire(block=True) as producer:
             producer.publish(
                 self.format_payload(worker_type, task),
                 exchange=exchange,
                 routing_key=routing_key
             )
-
-        return
 
 event_dispatcher = EventDispatcher()
