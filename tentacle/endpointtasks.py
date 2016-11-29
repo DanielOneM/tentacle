@@ -93,3 +93,17 @@ def search(msg):
             results.append(item.to_dict())
 
     return results
+
+
+@app.task
+def all(msg):
+    """Endpoint used to retrieve a list with all the registered events.
+
+    """
+    events = app.event_store.all()
+
+    results = []
+    for item in events:
+        results.append(item.to_dict())
+
+    return results

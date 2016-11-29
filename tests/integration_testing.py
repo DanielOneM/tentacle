@@ -35,6 +35,8 @@ search_payload = {
     'task_name': 'another'
 }
 
+all_payload = {}
+
 
 class TentaclePublisher(Publisher):
     """Publisher used to communicate with Tentacle."""
@@ -122,9 +124,21 @@ def test_endpoints():
     print response['result']
     print ">" * 20 + "\n"
 
+    # get all tasks registered
+    print "ALL TEST" + "\n" + ">" * 20
+    tnt = TentaclePublisher('all', msg=all_payload)
+    response = tnt.call()
+    print response['result']
+    print ">" * 20 + "\n"
+
 
 def test_scheduler():
-    """Check that events get scheduled and processed."""
+    """Check that events get scheduled and processed.
+
+    TODO: checked manually, write test to automate checking.
+    Basically a publisher like in the previous test plus a
+    consumer to listen to a specific vhost/exchange/queue.
+    """
     pass
     # connect to the tentacle exchange
 

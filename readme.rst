@@ -1,7 +1,8 @@
-ONEm Event Engine - codename Tentacle
+ONEm Event Engine - project codename: Tentacle
 
 
-Introduction:
+General Description:
+___________________
 
 	Tentacle is a single node event engine implementation,
 based on the scheduling and delivery functionalities provided
@@ -17,15 +18,42 @@ with the main event repository, loading any new events
 4. at the time or interval specified in the task info,
 the task is sent as a message to the respective worker
 
+	The queues used to submit the initial message and also
+all the worker messages are supposed to be RabbitMQ queues.
+    The main repository for the events/tasks is a
+Aerospike node, that can be clustered with other nodes to
+provide better failover support.
+
 	Tasks come in two flavours: Kraken or Nautilus.
 	For Kraken, they are adapted to the specific format used
 by the Kraken rpc engine, so they will need to be submitted
 in that format as well.
 	For Nautilus, they follow the standard Celery task description
 with the attributes that would be expected in this situation.
-Below you will find a short description of this
+Below you will find a short description of this format.
+
+	This model is used to save a received event to the event store.
+
+Attributes required:
+    name            - unique name for the task, 
+                      automatically generated if not given
+    worker_type     - type of worker that will handle the task
+    task            - function or method name with full dotted path
+    interval        - periodicity set as interval
+    crontab         - periodicity set as crontab
+    args            - any arguments for the task
+    kwargs          - any keyword arguments for the task
+    enabled         - if the task can be executed
+
+Optional attributes:
+    exchange        - destination exchange for this task
+    routing_key     - destination routing_key for this task
+    expires         - expiration date for task execution
+    description     - optional description
+
 
 Installation:
+___________________
 
 	Tentacle has one hard dependency (Aerospike DB).
 	It uses the database as the main datastore for all
@@ -48,9 +76,21 @@ make sure docker is installed on the system before running.
 tentacle/scripts/start_engine.sh.
 
 
-
 Monitoring:
+___________________
 
+	There is a logging mechanism active, outputting to the
+eventengine.log file. File should be changed periodically.
 
 
 Usage:
+___________________
+
+	From any external system, the event engine is
+only accesible through the RabbitMQ exposed endpoints.
+	The endpoints are self-explanatory:
+- put
+- get
+- delete
+- update
+- search
