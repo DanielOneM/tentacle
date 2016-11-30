@@ -66,21 +66,24 @@ exchanges in order to submit the work messages.
 	Installation of the engine can be done with the
 install script found in tentacle/scripts/install_tentacle.sh.
 
-	To run the app in development mode, use the testing
-script: tentacle/scripts/test_engine.sh
 	In development mode the app uses two local docker
 containers to hold Aerospike and RabbitMQ. You need to
 make sure docker is installed on the system before running.
+	To run the app in development mode, use the testing
+script: tentacle/scripts/test_engine.sh
 
 	To run the app in production, use the normal mode:
-tentacle/scripts/start_engine.sh.
+tentacle/scripts/start_engine.sh. Word of caution: the
+setup used in production is not recommended by the official
+Celery Docs (http://docs.celeryproject.org/en/3.1/userguide/
+periodic-tasks.html#starting-the-scheduler)
 
 
 Monitoring:
 ___________________
 
 	There is a logging mechanism active, outputting to the
-eventengine.log file. File should be changed periodically.
+eventengine.log file. File should be managed separately.
 
 
 Usage:
